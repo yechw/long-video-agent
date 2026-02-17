@@ -1,8 +1,11 @@
 package com.example.videoagent.controller;
 
 import com.example.videoagent.dto.ChatRequest;
+import com.example.videoagent.dto.Concept;
 import com.example.videoagent.dto.VideoResponse;
 import com.example.videoagent.service.VideoService;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -10,6 +13,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 
 @Controller
 @RequestMapping("/")
@@ -148,5 +152,46 @@ public class VideoController {
                 下一节课，我们将讨论如何使用 RAG 技术
                 来增强 AI 应用的知识检索能力。
                 """;
+    }
+
+    /**
+     * 提取知识点
+     */
+    @PostMapping("/extract")
+    public String extractConcepts(
+            @RequestParam("subtitleContent") String subtitleContent,
+            Model model) {
+
+        try {
+            String jsonResponse = videoService.extractConcepts(subtitleContent);
+
+            // 解析 JSON 为 List<Concept>
+            ObjectMapper mapper = new ObjectMapper();
+            String jsonArray = extractJsonArray(jsonResponse);
+            List<Concept> concepts = mapper.readValue(jsonArray,
+                    new TypeReference<List<Concept>>(){});
+
+            model.addAttribute("subtitleLoaded", true);
+            model.addAttribute("subtitleContent", subtitleContent);
+            model.addAttribute("concepts", concepts);
+        } catch (Exception e) {
+            model.addAttribute("error", "提取知识点失败: " + e.getMessage());
+            model.addAttribute("subtitleLoaded", true);
+            model.addAttribute("subtitleContent", subtitleContent);
+        }
+
+        return "index";
+    }
+
+    /**
+     * 从 AI 响应中提取 JSON 数组
+     */
+    private String extractJsonArray(String response) {
+        int start = response.indexOf('[');
+        int end = response.lastIndexOf(']');
+        if (start >= 0 && end > start) {
+            return response.substring(start, end + 1);
+        }
+        return "[]";
     }
 }

@@ -41,12 +41,19 @@
             </div>
         </section>
 
+        <!-- 操作区域 -->
         <section class="action-section" th:if="${subtitleLoaded}">
             <h2>📊 快捷操作</h2>
-            <form action="/summarize" method="post">
-                <input type="hidden" name="subtitleContent" th:value="${subtitleContent}">
-                <button type="submit" class="btn btn-primary btn-large">生成全局总结</button>
-            </form>
+            <div class="button-group">
+                <form action="/summarize" method="post" style="display:inline">
+                    <input type="hidden" name="subtitleContent" th:value="${subtitleContent}">
+                    <button type="submit" class="btn btn-primary">生成全局总结</button>
+                </form>
+                <form action="/extract" method="post" style="display:inline">
+                    <input type="hidden" name="subtitleContent" th:value="${subtitleContent}">
+                    <button type="submit" class="btn btn-secondary">提取知识点</button>
+                </form>
+            </div>
         </section>
 
         <section class="result-section" th:if="${summary}">
@@ -56,6 +63,25 @@
             </div>
         </section>
 
+        <!-- 知识点时间线 -->
+        <section class="timeline-section" th:if="${concepts}">
+            <h2>📚 知识点时间线</h2>
+            <div class="timeline">
+                <div class="timeline-item" th:each="concept : ${concepts}">
+                    <div class="timeline-time">
+                        <span th:text="${concept.timestampFrom}">00:00:00</span>
+                        <span class="time-arrow">→</span>
+                        <span th:text="${concept.timestampTo}">00:00:12</span>
+                    </div>
+                    <div class="timeline-content">
+                        <h3 class="concept-name" th:text="${concept.concept}">知识点名称</h3>
+                        <p class="concept-desc" th:text="${concept.description}">知识点描述</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 问答区域 -->
         <section class="chat-section" th:if="${subtitleLoaded}">
             <h2>💬 问答对话</h2>
             <form action="/chat" method="post">
