@@ -47,4 +47,33 @@ public final class PromptConstants {
 
             请基于以上视频字幕回答问题。如果视频中没有相关内容，请直接说明。
             """;
+
+    /**
+     * 提取知识点 Prompt 模板
+     * 输出格式：JSON 数组
+     */
+    public static final String EXTRACT_CONCEPTS_PROMPT_TEMPLATE = """
+            %s
+
+            ---
+            基于以上视频字幕内容，提取 5-10 个核心知识点。
+
+            【输出格式要求】
+            必须输出纯 JSON 数组，不要包含任何开场白或结束语。
+            每个知识点包含以下字段：
+            - timestampFrom: 知识点开始时间（格式: HH:MM:SS）
+            - timestampTo: 知识点结束时间（格式: HH:MM:SS）
+            - concept: 知识点名称（简短，不超过10字）
+            - description: 知识点描述（1-2句话说明）
+
+            【示例输出】
+            [
+              {
+                "timestampFrom": "00:00:05",
+                "timestampTo": "00:00:20",
+                "concept": "提示工程",
+                "description": "提示工程是构建 AI 应用的核心技能"
+              }
+            ]
+            """;
 }

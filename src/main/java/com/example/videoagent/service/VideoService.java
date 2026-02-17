@@ -19,4 +19,11 @@ public interface VideoService {
      * @return AI 回答
      */
     String chat(String subtitleContent, String question);
+
+    /**
+     * 提取知识点
+     * @param subtitleContent 字幕内容
+     * @return JSON 格式的知识点列表
+     */
+    String extractConcepts(String subtitleContent);
 }

@@ -45,4 +45,17 @@ public class VideoServiceImpl implements VideoService {
                 .call()
                 .content();
     }
+
+    @Override
+    public String extractConcepts(String subtitleContent) {
+        String userPrompt = String.format(
+                PromptConstants.EXTRACT_CONCEPTS_PROMPT_TEMPLATE,
+                subtitleContent
+        );
+
+        return chatClient.prompt()
+                .user(userPrompt)
+                .call()
+                .content();
+    }
 }

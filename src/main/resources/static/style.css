@@ -63,3 +63,79 @@ footer { text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1p
     .button-group { flex-direction: column; }
     header h1 { font-size: 1.5em; }
 }
+
+/* 时间线样式 */
+.timeline-section {
+    margin-top: 20px;
+}
+
+.timeline {
+    position: relative;
+    padding-left: 30px;
+}
+
+.timeline::before {
+    content: '';
+    position: absolute;
+    left: 10px;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: linear-gradient(to bottom, #667eea, #764ba2);
+}
+
+.timeline-item {
+    position: relative;
+    margin-bottom: 20px;
+    padding: 15px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    border-left: 3px solid #667eea;
+}
+
+.timeline-item::before {
+    content: '';
+    position: absolute;
+    left: -23px;
+    top: 20px;
+    width: 10px;
+    height: 10px;
+    background: #667eea;
+    border-radius: 50%;
+}
+
+.timeline-time {
+    font-size: 0.85em;
+    color: #667eea;
+    font-weight: 500;
+    margin-bottom: 8px;
+}
+
+.time-arrow {
+    margin: 0 5px;
+}
+
+.concept-name {
+    font-size: 1.1em;
+    color: #333;
+    margin-bottom: 5px;
+}
+
+.concept-desc {
+    font-size: 0.9em;
+    color: #666;
+    line-height: 1.5;
+}
+
+/* 响应式时间线 */
+@media (max-width: 600px) {
+    .timeline {
+        padding-left: 25px;
+    }
+
+    .timeline-item::before {
+        left: -18px;
+        width: 8px;
+        height: 8px;
+    }
+}
