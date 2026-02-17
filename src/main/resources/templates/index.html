@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>长视频智能分析助手</title>
+    <link rel="stylesheet" th:href="@{/style.css}">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🎬 长视频智能分析助手</h1>
+            <p class="subtitle">上传字幕文件，AI 帮你高效学习</p>
+        </header>
+
+        <div class="error" th:if="${error}">
+            <p th:text="${error}"></p>
+        </div>
+
+        <section class="upload-section">
+            <h2>📁 上传字幕文件</h2>
+            <form action="/upload" method="post" enctype="multipart/form-data">
+                <div class="file-input-wrapper">
+                    <input type="file" name="file" accept=".txt,.srt">
+                    <span>支持 .txt .srt 格式</span>
+                </div>
+                <div class="button-group">
+                    <button type="submit" class="btn btn-primary">上传文件</button>
+                    <button type="submit" name="useSample" value="true" class="btn btn-secondary">
+                        使用示例字幕
+                    </button>
+                </div>
+            </form>
+        </section>
+
+        <section class="status-section" th:if="${subtitleLoaded}">
+            <div class="status-card">
+                <span class="label">当前字幕：</span>
+                <span class="filename" th:text="${fileName}">-</span>
+                <span class="char-count" th:text="'(' + ${charCount} + ' 字符)'">(- 字符)</span>
+            </div>
+        </section>
+
+        <section class="action-section" th:if="${subtitleLoaded}">
+            <h2>📊 快捷操作</h2>
+            <form action="/summarize" method="post">
+                <input type="hidden" name="subtitleContent" th:value="${subtitleContent}">
+                <button type="submit" class="btn btn-primary btn-large">生成全局总结</button>
+            </form>
+        </section>
+
+        <section class="result-section" th:if="${summary}">
+            <h2>📝 视频总结</h2>
+            <div class="result-card">
+                <pre th:text="${summary}"></pre>
+            </div>
+        </section>
+
+        <section class="chat-section" th:if="${subtitleLoaded}">
+            <h2>💬 问答对话</h2>
+            <form action="/chat" method="post">
+                <input type="hidden" name="subtitleContent" th:value="${subtitleContent}">
+                <div class="chat-input-wrapper">
+                    <textarea name="question" placeholder="输入你的问题..." rows="3"
+                              th:text="${question}"></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary">发送提问</button>
+            </form>
+        </section>
+
+        <section class="result-section" th:if="${answer}">
+            <h2>🤖 AI 回答</h2>
+            <div class="result-card">
+                <p class="question-preview" th:if="${question}">
+                    <strong>问题：</strong><span th:text="${question}"></span>
+                </p>
+                <pre th:text="${answer}"></pre>
+            </div>
+        </section>
+
+        <footer>
+            <p>基于 Spring AI Alibaba | 学习项目</p>
+        </footer>
+    </div>
+</body>
+</html>
