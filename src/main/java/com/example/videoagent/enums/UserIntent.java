@@ -9,5 +9,6 @@ public enum UserIntent {
     QA,               // 问答
     EXTRACT_CONCEPTS, // 提取知识点
     EXTRACT_QUOTES,   // 金句提取
-    SEARCH_KEYWORD    // 关键词搜索
+    SEARCH_KEYWORD,   // 关键词搜索
+    DEEP_QA           // 深度分析（CoT推理）
 }

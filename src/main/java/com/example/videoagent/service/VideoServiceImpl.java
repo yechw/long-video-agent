@@ -108,7 +108,30 @@ public class VideoServiceImpl implements VideoService {
                 String keyword = extractKeywordFromQuestion(question);
                 yield searchKeyword(subtitleContent, keyword);
             }
+            case DEEP_QA -> deepAnalyze(subtitleContent, question);
         };
+    }
+
+    @Override
+    public String deepAnalyze(String subtitleContent, String question) {
+        // 移除前缀，获取真实问题
+        String realQuestion = question;
+        if (question.startsWith("/deep ")) {
+            realQuestion = question.substring(6).trim();
+        } else if (question.startsWith("深度分析：") || question.startsWith("深度分析:")) {
+            realQuestion = question.substring(5).trim();
+        }
+
+        String userPrompt = String.format(
+                PromptConstants.DEEP_QA_PROMPT_TEMPLATE,
+                subtitleContent,
+                realQuestion
+        );
+
+        return chatClient.prompt()
+                .user(userPrompt)
+                .call()
+                .content();
     }
 
     /**
