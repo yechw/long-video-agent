@@ -229,4 +229,128 @@ public final class PromptConstants {
         - concept: 知识点名称（不超过10字）
         - description: 知识点描述（1-2句话）
         """;
+
+    /**
+     * 意图分类 Prompt
+     * 用于识别用户意图类型
+     */
+    public static final String INTENT_CLASSIFICATION_PROMPT = """
+        你是一个意图分类器。分析用户问题，判断用户想要执行什么操作。
+
+        【意图类型】
+        - SUMMARIZE: 用户想要视频的总结或概览
+          示例: "总结一下"、"这个视频讲了什么"、"给我一个概览"
+
+        - QA: 用户有具体问题需要回答
+          示例: "什么是RAG？"、"Transformer有什么优势？"
+
+        - EXTRACT_CONCEPTS: 用户想要提取知识点或核心概念
+          示例: "提取知识点"、"有哪些核心概念"、"列出关键点"
+
+        - EXTRACT_QUOTES: 用户想要提取金句或精彩语录
+          示例: "有哪些金句"、"精彩语录"、"给我一些好句子"
+
+        - SEARCH_KEYWORD: 用户想要搜索关键词在视频中的位置
+          示例: "哪里提到了..."、"在什么位置说了..."、"搜索..."
+
+        【输出格式】
+        只输出一个 JSON 对象，不要有任何其他内容：
+        {"intent": "意图类型", "confidence": 0.0-1.0}
+
+        【用户问题】
+        %s
+        """;
+
+    /**
+     * 金句提取 Prompt 模板
+     */
+    public static final String EXTRACT_QUOTES_PROMPT_TEMPLATE = """
+        【示例】
+        字幕内容：
+        [00:05:20] AI 不会取代你，但会用 AI 的人会取代你
+        [00:12:45] 最好的代码是没有代码，最好的提示是没有提示
+
+        助手输出：
+        [
+          {
+            "timestamp": "00:05:20",
+            "quote": "AI 不会取代你，但会用 AI 的人会取代你",
+            "context": "讨论 AI 时代个人竞争力的变化"
+          },
+          {
+            "timestamp": "00:12:45",
+            "quote": "最好的代码是没有代码，最好的提示是没有提示",
+            "context": "强调简化思维的重要性"
+          }
+        ]
+
+        ========================================
+        以下是实际任务：
+        ========================================
+
+        %s
+
+        ---
+        基于以上视频字幕内容，提取 5-10 条金句或精彩语录。
+
+        【输出要求】
+        1. 必须输出纯 JSON 数组格式
+        2. 时间戳格式统一为 HH:MM:SS
+        3. 如果无明确金句，输出空数组 []
+        4. 不要包含任何开场白或结束语
+
+        【字段说明】
+        - timestamp: 金句出现的时间戳
+        - quote: 金句原文
+        - context: 金句的上下文说明
+        """;
+
+    /**
+     * 关键词搜索 Prompt 模板
+     */
+    public static final String SEARCH_KEYWORD_PROMPT_TEMPLATE = """
+        【示例】
+        字幕内容：
+        [00:01:00] 今天我们来聊聊 Transformer 架构
+        [00:05:30] Transformer 的核心是自注意力机制
+        [00:10:00] 相比 RNN，Transformer 可以并行计算
+        [00:15:20] BERT 和 GPT 都基于 Transformer
+
+        搜索关键词：Transformer
+
+        助手输出：
+        {
+          "keyword": "Transformer",
+          "occurrences": [
+            {
+              "timestamp": "00:01:00",
+              "context": "今天我们来聊聊 Transformer 架构"
+            },
+            {
+              "timestamp": "00:05:30",
+              "context": "Transformer 的核心是自注意力机制"
+            },
+            {
+              "timestamp": "00:10:00",
+              "context": "相比 RNN，Transformer 可以并行计算"
+            },
+            {
+              "timestamp": "00:15:20",
+              "context": "BERT 和 GPT 都基于 Transformer"
+            }
+          ],
+          "summary": "视频中 4 处提到 Transformer，主要讨论其架构原理和与 RNN 的对比"
+        }
+
+        ========================================
+        以下是实际任务：
+        ========================================
+
+        %s
+
+        ---
+        搜索关键词：%s
+
+        请找出该关键词在视频中的所有出现位置。
+        """;
 }
