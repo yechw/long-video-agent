@@ -56,6 +56,41 @@
             </div>
         </section>
 
+        <!-- 智能问答区域 -->
+        <section class="smart-ask-section" th:if="${subtitleLoaded}">
+            <h2>🤖 智能问答 (自动识别意图)</h2>
+            <p class="hint">输入任意问题，AI 会自动判断你的意图（总结/问答/知识点/金句/搜索）</p>
+            <form action="/ask" method="post">
+                <input type="hidden" name="subtitleContent" th:value="${subtitleContent}">
+                <div class="chat-input-wrapper">
+                    <textarea name="question" placeholder="例如：总结一下这个视频 / 有哪些金句 / 哪里提到了 Transformer" rows="3"
+                              th:text="${smartQuestion}"></textarea>
+                </div>
+                <div class="option-group">
+                    <label class="checkbox-label">
+                        <input type="checkbox" name="debug" value="true">
+                        显示调试信息（意图分类结果）
+                    </label>
+                </div>
+                <button type="submit" class="btn btn-primary">智能回答</button>
+            </form>
+        </section>
+
+        <!-- 智能问答结果 -->
+        <section class="result-section" th:if="${smartAnswer}">
+            <h2>🎯 智能回答</h2>
+            <div class="result-card">
+                <p class="question-preview" th:if="${smartQuestion}">
+                    <strong>问题：</strong><span th:text="${smartQuestion}"></span>
+                </p>
+                <div class="debug-info" th:if="${debugIntent}">
+                    <span class="debug-badge">意图: <strong th:text="${debugIntent}">-</strong></span>
+                    <span class="debug-badge">置信度: <strong th:text="${#numbers.formatDecimal(debugConfidence, 1, 2)}">-</strong></span>
+                </div>
+                <pre th:text="${smartAnswer}"></pre>
+            </div>
+        </section>
+
         <section class="result-section" th:if="${summary}">
             <h2>📝 视频总结</h2>
             <div class="result-card">

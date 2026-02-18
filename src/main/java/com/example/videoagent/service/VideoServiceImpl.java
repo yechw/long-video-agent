@@ -1,6 +1,8 @@
 package com.example.videoagent.service;
 
 import com.example.videoagent.config.PromptConstants;
+import com.example.videoagent.dto.IntentResult;
+import com.example.videoagent.enums.UserIntent;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.stereotype.Service;
 
@@ -12,11 +14,14 @@ import org.springframework.stereotype.Service;
 public class VideoServiceImpl implements VideoService {
 
     private final ChatClient chatClient;
+    private final IntentClassificationService intentClassificationService;
 
-    public VideoServiceImpl(ChatClient.Builder chatClientBuilder) {
+    public VideoServiceImpl(ChatClient.Builder chatClientBuilder,
+                           IntentClassificationService intentClassificationService) {
         this.chatClient = chatClientBuilder
                 .defaultSystem(PromptConstants.SYSTEM_PROMPT)
                 .build();
+        this.intentClassificationService = intentClassificationService;
     }
 
     @Override
@@ -57,5 +62,70 @@ public class VideoServiceImpl implements VideoService {
                 .user(userPrompt)
                 .call()
                 .content();
+    }
+
+    @Override
+    public String extractQuotes(String subtitleContent) {
+        String userPrompt = String.format(
+                PromptConstants.EXTRACT_QUOTES_PROMPT_TEMPLATE,
+                subtitleContent
+        );
+
+        return chatClient.prompt()
+                .user(userPrompt)
+                .call()
+                .content();
+    }
+
+    @Override
+    public String searchKeyword(String subtitleContent, String keyword) {
+        String userPrompt = String.format(
+                PromptConstants.SEARCH_KEYWORD_PROMPT_TEMPLATE,
+                subtitleContent,
+                keyword
+        );
+
+        return chatClient.prompt()
+                .user(userPrompt)
+                .call()
+                .content();
+    }
+
+    @Override
+    public String smartAsk(String subtitleContent, String question) {
+        // Step 1: 意图分类
+        IntentResult intentResult = intentClassificationService.classifyIntentWithCache(question);
+        UserIntent intent = intentResult.getIntent();
+
+        // Step 2: 根据意图路由到对应的专用 Prompt
+        return switch (intent) {
+            case SUMMARIZE -> summarize(subtitleContent);
+            case QA -> chat(subtitleContent, question);
+            case EXTRACT_CONCEPTS -> extractConcepts(subtitleContent);
+            case EXTRACT_QUOTES -> extractQuotes(subtitleContent);
+            case SEARCH_KEYWORD -> {
+                // 从问题中提取关键词
+                String keyword = extractKeywordFromQuestion(question);
+                yield searchKeyword(subtitleContent, keyword);
+            }
+        };
+    }
+
+    /**
+     * 从问题中提取搜索关键词
+     * 简单实现：移除常见前缀词
+     */
+    private String extractKeywordFromQuestion(String question) {
+        // 移除常见的前缀
+        String keyword = question
+                .replace("哪里提到了", "")
+                .replace("在什么位置说了", "")
+                .replace("搜索", "")
+                .replace("查找", "")
+                .replace("找到", "")
+                .trim();
+
+        // 如果关键词为空，返回原问题
+        return keyword.isEmpty() ? question : keyword;
     }
 }
