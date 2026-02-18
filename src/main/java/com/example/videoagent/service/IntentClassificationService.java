@@ -40,6 +40,11 @@ public class IntentClassificationService {
      * 带缓存的意图分类
      */
     public IntentResult classifyIntentWithCache(String question) {
+        // 0. 前缀检测：深度分析模式
+        if (question.startsWith("/deep ") || question.startsWith("深度分析：") || question.startsWith("深度分析:")) {
+            return new IntentResult(UserIntent.DEEP_QA, 1.0);
+        }
+
         // 1. 尝试从缓存获取
         IntentResult cached = intentCache.getIfPresent(question);
         if (cached != null) {

@@ -49,4 +49,13 @@ public interface VideoService {
      * @return 回答内容
      */
     String smartAsk(String subtitleContent, String question);
+
+    /**
+     * 深度分析问答
+     * 启用 CoT (思维链) 模式进行推理
+     * @param subtitleContent 字幕内容
+     * @param question 用户问题
+     * @return 深度分析回答
+     */
+    String deepAnalyze(String subtitleContent, String question);
 }
