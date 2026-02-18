@@ -2,7 +2,9 @@ package com.example.videoagent.controller;
 
 import com.example.videoagent.dto.ChatRequest;
 import com.example.videoagent.dto.Concept;
+import com.example.videoagent.dto.IntentResult;
 import com.example.videoagent.dto.VideoResponse;
+import com.example.videoagent.service.IntentClassificationService;
 import com.example.videoagent.service.VideoService;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -20,9 +22,12 @@ import java.util.List;
 public class VideoController {
 
     private final VideoService videoService;
+    private final IntentClassificationService intentClassificationService;
 
-    public VideoController(VideoService videoService) {
+    public VideoController(VideoService videoService,
+                          IntentClassificationService intentClassificationService) {
         this.videoService = videoService;
+        this.intentClassificationService = intentClassificationService;
     }
 
     @GetMapping
@@ -193,5 +198,40 @@ public class VideoController {
             return response.substring(start, end + 1);
         }
         return "[]";
+    }
+
+    /**
+     * 智能问答入口
+     * 自动识别意图并路由到专用 Prompt
+     */
+    @PostMapping("/ask")
+    public String smartAsk(
+            @RequestParam("subtitleContent") String subtitleContent,
+            @RequestParam("question") String question,
+            @RequestParam(value = "debug", required = false, defaultValue = "false") Boolean debug,
+            Model model) {
+
+        try {
+            // 执行智能问答
+            String answer = videoService.smartAsk(subtitleContent, question);
+
+            model.addAttribute("subtitleLoaded", true);
+            model.addAttribute("subtitleContent", subtitleContent);
+            model.addAttribute("smartQuestion", question);
+            model.addAttribute("smartAnswer", answer);
+
+            // 调试模式：返回意图信息
+            if (Boolean.TRUE.equals(debug)) {
+                IntentResult intentResult = intentClassificationService.classifyIntentWithCache(question);
+                model.addAttribute("debugIntent", intentResult.getIntent().name());
+                model.addAttribute("debugConfidence", intentResult.getConfidence());
+            }
+        } catch (Exception e) {
+            model.addAttribute("error", "智能问答失败: " + e.getMessage());
+            model.addAttribute("subtitleLoaded", true);
+            model.addAttribute("subtitleContent", subtitleContent);
+        }
+
+        return "index";
     }
 }
