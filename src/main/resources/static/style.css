@@ -139,3 +139,111 @@ footer { text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1p
         height: 8px;
     }
 }
+
+/* Markdown 内容样式 */
+.markdown-content {
+    line-height: 1.8;
+    color: #333;
+}
+
+.markdown-rendered {
+    white-space: normal;
+}
+
+/* 标题样式 */
+.markdown-rendered h1,
+.markdown-rendered h2,
+.markdown-rendered h3 {
+    color: #333;
+    margin: 1.5em 0 0.8em;
+    padding-bottom: 0.3em;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.markdown-rendered h1 { font-size: 1.5em; }
+.markdown-rendered h2 { font-size: 1.3em; }
+.markdown-rendered h3 { font-size: 1.1em; }
+
+/* 段落 */
+.markdown-rendered p {
+    margin: 0.8em 0;
+}
+
+/* 列表 */
+.markdown-rendered ul,
+.markdown-rendered ol {
+    margin: 0.8em 0;
+    padding-left: 2em;
+}
+
+.markdown-rendered li {
+    margin: 0.4em 0;
+}
+
+/* 代码块 */
+.markdown-rendered pre {
+    background: #1e1e1e;
+    border-radius: 8px;
+    padding: 1em;
+    overflow-x: auto;
+    margin: 1em 0;
+    border: 1px solid #ddd;
+}
+
+.markdown-rendered code {
+    font-family: 'Fira Code', 'Consolas', monospace;
+    font-size: 0.9em;
+}
+
+/* 行内代码 */
+.markdown-rendered p code {
+    background: #f0f0f0;
+    padding: 0.2em 0.4em;
+    border-radius: 4px;
+    color: #c7254e;
+}
+
+/* 引用块 */
+.markdown-rendered blockquote {
+    border-left: 4px solid #667eea;
+    margin: 1em 0;
+    padding: 0.5em 1em;
+    background: #f8f9fa;
+    color: #666;
+}
+
+/* 链接 */
+.markdown-rendered a {
+    color: #667eea;
+    text-decoration: none;
+}
+
+.markdown-rendered a:hover {
+    text-decoration: underline;
+}
+
+/* 表格 */
+.markdown-rendered table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 1em 0;
+}
+
+.markdown-rendered th,
+.markdown-rendered td {
+    border: 1px solid #ddd;
+    padding: 0.6em 1em;
+    text-align: left;
+}
+
+.markdown-rendered th {
+    background: #f8f9fa;
+    font-weight: bold;
+}
+
+/* 分割线 */
+.markdown-rendered hr {
+    border: none;
+    border-top: 1px solid #e0e0e0;
+    margin: 1.5em 0;
+}
