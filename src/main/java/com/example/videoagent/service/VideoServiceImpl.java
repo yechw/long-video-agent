@@ -5,6 +5,7 @@ import com.example.videoagent.dto.IntentResult;
 import com.example.videoagent.enums.UserIntent;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.stereotype.Service;
+import reactor.core.publisher.Flux;
 
 /**
  * 视频分析服务实现
@@ -132,6 +133,47 @@ public class VideoServiceImpl implements VideoService {
                 .user(userPrompt)
                 .call()
                 .content();
+    }
+
+    @Override
+    public Flux<String> smartAskStream(String subtitleContent, String question) {
+        // Step 1: 意图分类（复用现有逻辑）
+        IntentResult intentResult = intentClassificationService.classifyIntentWithCache(question);
+        UserIntent intent = intentResult.getIntent();
+
+        // Step 2: 根据意图构建 Prompt
+        String userPrompt = buildPromptByIntent(subtitleContent, question, intent);
+
+        // Step 3: 流式调用 AI
+        return chatClient.prompt()
+                .user(userPrompt)
+                .stream()
+                .content();
+    }
+
+    /**
+     * 根据意图构建对应的 Prompt
+     */
+    private String buildPromptByIntent(String subtitleContent, String question, UserIntent intent) {
+        return switch (intent) {
+            case SUMMARIZE -> String.format(PromptConstants.SUMMARIZE_PROMPT_TEMPLATE, subtitleContent);
+            case QA -> String.format(PromptConstants.CHAT_PROMPT_TEMPLATE, subtitleContent, question);
+            case EXTRACT_CONCEPTS -> String.format(PromptConstants.EXTRACT_CONCEPTS_PROMPT_TEMPLATE, subtitleContent);
+            case EXTRACT_QUOTES -> String.format(PromptConstants.EXTRACT_QUOTES_PROMPT_TEMPLATE, subtitleContent);
+            case SEARCH_KEYWORD -> {
+                String keyword = extractKeywordFromQuestion(question);
+                yield String.format(PromptConstants.SEARCH_KEYWORD_PROMPT_TEMPLATE, subtitleContent, keyword);
+            }
+            case DEEP_QA -> {
+                String realQuestion = question;
+                if (question.startsWith("/deep ")) {
+                    realQuestion = question.substring(6).trim();
+                } else if (question.startsWith("深度分析：") || question.startsWith("深度分析:")) {
+                    realQuestion = question.substring(5).trim();
+                }
+                yield String.format(PromptConstants.DEEP_QA_PROMPT_TEMPLATE, subtitleContent, realQuestion);
+            }
+        };
     }
 
     /**
