@@ -47,3 +47,4 @@ Thumbs.db
 
 # Worktrees
 .worktrees/
+.playwright-cli/

@@ -60,7 +60,7 @@ class MarkdownRenderingE2ETest {
             mockMvc.perform(get("/"))
                 .andExpect(status().isOk())
                 .andExpect(content().string(
-                    org.hamcrest.Matchers.containsString("cdn.jsdelivr.net/npm/highlight.js@11")
+                    org.hamcrest.Matchers.containsString("cdnjs.cloudflare.com/ajax/libs/highlight.js")
                 ));
         }
 
@@ -70,7 +70,7 @@ class MarkdownRenderingE2ETest {
             mockMvc.perform(get("/"))
                 .andExpect(status().isOk())
                 .andExpect(content().string(
-                    org.hamcrest.Matchers.containsString("highlight.js@11/styles/github-dark.min.css")
+                    org.hamcrest.Matchers.containsString("highlight.js/11.9.0/styles/github-dark.min.css")
                 ));
         }
     }
