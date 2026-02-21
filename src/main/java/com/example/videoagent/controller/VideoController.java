@@ -8,10 +8,15 @@ import com.example.videoagent.service.IntentClassificationService;
 import com.example.videoagent.service.VideoService;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
+import reactor.core.scheduler.Schedulers;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -20,6 +25,8 @@ import java.util.List;
 @Controller
 @RequestMapping("/")
 public class VideoController {
+
+    private static final Logger log = LoggerFactory.getLogger(VideoController.class);
 
     private final VideoService videoService;
     private final IntentClassificationService intentClassificationService;
@@ -233,5 +240,49 @@ public class VideoController {
         }
 
         return "index";
+    }
+
+    /**
+     * 流式智能问答入口
+     * 使用 SSE (Server-Sent Events) 实现流式输出
+     */
+    @GetMapping(value = "/stream/ask", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    public SseEmitter smartAskStream(
+            @RequestParam("subtitleContent") String subtitleContent,
+            @RequestParam("question") String question) {
+
+        SseEmitter emitter = new SseEmitter(60_000L); // 60秒超时
+
+        // 超时处理
+        emitter.onTimeout(() -> {
+            log.info("SSE connection timeout");
+            emitter.complete();
+        });
+
+        // 异常处理
+        emitter.onError(e -> log.error("SSE error", e));
+
+        // 订阅 Flux 流并推送到 SseEmitter
+        videoService.smartAskStream(subtitleContent, question)
+            .publishOn(Schedulers.boundedElastic())
+            .doOnNext(chunk -> {
+                try {
+                    emitter.send(SseEmitter.event().data(chunk));
+                } catch (IOException e) {
+                    emitter.completeWithError(e);
+                }
+            })
+            .doOnComplete(emitter::complete)
+            .doOnError(error -> {
+                try {
+                    emitter.send(SseEmitter.event()
+                        .name("error")
+                        .data("生成失败: " + error.getMessage()));
+                    emitter.complete();
+                } catch (IOException ignored) {}
+            })
+            .subscribe();
+
+        return emitter;
     }
 }

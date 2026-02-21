@@ -78,6 +78,9 @@
                     </label>
                 </div>
                 <button type="submit" class="btn btn-primary">智能回答</button>
+                <button type="button" id="streamAskBtn" class="btn btn-secondary" style="margin-left: 8px;">
+                    流式提问
+                </button>
             </form>
         </section>
 
@@ -95,6 +98,20 @@
                 <div class="markdown-content" th:data-content="${smartAnswer}">
                     <div class="markdown-rendered"></div>
                 </div>
+            </div>
+        </section>
+
+        <!-- 流式问答结果 -->
+        <section class="result-section" id="stream-response" style="display: none;">
+            <h2>🌊 流式回答</h2>
+            <div class="result-card">
+                <p class="question-preview">
+                    <strong>问题：</strong><span id="stream-question"></span>
+                </p>
+                <div class="markdown-content">
+                    <div class="markdown-rendered" id="stream-answer"></div>
+                </div>
+                <div class="stream-status" id="stream-status"></div>
             </div>
         </section>
 
@@ -174,7 +191,70 @@ document.addEventListener('DOMContentLoaded', function() {
             rendered.innerHTML = marked.parse(content);
         }
     });
+
+    // 流式问答功能
+    initStreamAsk();
 });
+
+function initStreamAsk() {
+    const streamAskBtn = document.getElementById('streamAskBtn');
+    if (!streamAskBtn) return;
+
+    streamAskBtn.addEventListener('click', function() {
+        const questionInput = document.querySelector('textarea[name="question"]');
+        const subtitleContentInput = document.querySelector('input[name="subtitleContent"]');
+
+        const question = questionInput.value.trim();
+        const subtitleContent = subtitleContentInput.value;
+
+        if (!question) {
+            alert('请输入问题');
+            return;
+        }
+
+        askStream(question, subtitleContent);
+    });
+}
+
+function askStream(question, subtitleContent) {
+    const streamResponse = document.getElementById('stream-response');
+    const streamAnswer = document.getElementById('stream-answer');
+    const streamQuestion = document.getElementById('stream-question');
+    const streamStatus = document.getElementById('stream-status');
+
+    // 显示流式响应区域
+    streamResponse.style.display = 'block';
+    streamQuestion.textContent = question;
+    streamAnswer.innerHTML = '';
+    streamStatus.textContent = '正在生成...';
+
+    // 构建 SSE URL
+    const url = '/stream/ask?subtitleContent=' + encodeURIComponent(subtitleContent) + '&question=' + encodeURIComponent(question);
+
+    const eventSource = new EventSource(url);
+
+    eventSource.onmessage = function(event) {
+        streamAnswer.innerHTML += event.data;
+    };
+
+    eventSource.onerror = function() {
+        streamStatus.textContent = '连接中断';
+        eventSource.close();
+    };
+
+    eventSource.addEventListener('error', function(event) {
+        streamStatus.textContent = '错误: ' + event.data;
+        eventSource.close();
+    });
+
+    // 完成时更新状态
+    const checkComplete = setInterval(function() {
+        if (eventSource.readyState === EventSource.CLOSED) {
+            streamStatus.textContent = '生成完成';
+            clearInterval(checkComplete);
+        }
+    }, 100);
+}
 </script>
 </body>
 </html>

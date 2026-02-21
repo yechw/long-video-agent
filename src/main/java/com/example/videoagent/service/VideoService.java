@@ -1,5 +1,7 @@
 package com.example.videoagent.service;
 
+import reactor.core.publisher.Flux;
+
 /**
  * 视频分析服务接口
  */
@@ -58,4 +60,12 @@ public interface VideoService {
      * @return 深度分析回答
      */
     String deepAnalyze(String subtitleContent, String question);
+
+    /**
+     * 智能问答流式输出
+     * @param subtitleContent 字幕内容
+     * @param question 用户问题
+     * @return 流式回答内容
+     */
+    Flux<String> smartAskStream(String subtitleContent, String question);
 }
