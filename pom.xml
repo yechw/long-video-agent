@@ -68,6 +68,14 @@
             <scope>test</scope>
         </dependency>
 
+        <!-- Playwright for E2E testing -->
+        <dependency>
+            <groupId>com.microsoft.playwright</groupId>
+            <artifactId>playwright</artifactId>
+            <version>1.40.0</version>
+            <scope>test</scope>
+        </dependency>
+
         <!-- Caffeine Cache -->
         <dependency>
             <groupId>com.github.ben-manes.caffeine</groupId>
