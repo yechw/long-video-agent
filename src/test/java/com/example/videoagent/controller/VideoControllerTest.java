@@ -13,6 +13,7 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -43,7 +44,7 @@ class VideoControllerTest {
         String question = "总结一下";
         String expectedAnswer = "这是总结内容";
 
-        when(videoService.smartAsk(SAMPLE_SUBTITLE, question)).thenReturn(expectedAnswer);
+        when(videoService.smartAsk(SAMPLE_SUBTITLE, question, null)).thenReturn(expectedAnswer);
 
         // Act & Assert
         mockMvc.perform(post("/ask")
@@ -64,7 +65,7 @@ class VideoControllerTest {
         String expectedAnswer = "这是总结内容";
         IntentResult intentResult = new IntentResult(UserIntent.SUMMARIZE, 0.95);
 
-        when(videoService.smartAsk(SAMPLE_SUBTITLE, question)).thenReturn(expectedAnswer);
+        when(videoService.smartAsk(SAMPLE_SUBTITLE, question, null)).thenReturn(expectedAnswer);
         when(intentClassificationService.classifyIntentWithCache(question)).thenReturn(intentResult);
 
         // Act & Assert
@@ -86,7 +87,7 @@ class VideoControllerTest {
         String question = "总结一下";
         String expectedAnswer = "这是总结内容";
 
-        when(videoService.smartAsk(SAMPLE_SUBTITLE, question)).thenReturn(expectedAnswer);
+        when(videoService.smartAsk(SAMPLE_SUBTITLE, question, null)).thenReturn(expectedAnswer);
 
         // Act & Assert
         mockMvc.perform(post("/ask")
@@ -105,7 +106,7 @@ class VideoControllerTest {
     void ask_ServiceException_ReturnsError() throws Exception {
         // Arrange
         String question = "总结一下";
-        when(videoService.smartAsk(SAMPLE_SUBTITLE, question))
+        when(videoService.smartAsk(SAMPLE_SUBTITLE, question, null))
             .thenThrow(new RuntimeException("服务异常"));
 
         // Act & Assert
@@ -123,7 +124,7 @@ class VideoControllerTest {
     void ask_PreservesSubtitleContent() throws Exception {
         // Arrange
         String question = "总结一下";
-        when(videoService.smartAsk(SAMPLE_SUBTITLE, question)).thenReturn("回答");
+        when(videoService.smartAsk(SAMPLE_SUBTITLE, question, null)).thenReturn("回答");
 
         // Act & Assert
         mockMvc.perform(post("/ask")
@@ -140,7 +141,7 @@ class VideoControllerTest {
     void summarize_NormalRequest_ReturnsSummary() throws Exception {
         // Arrange
         String expectedSummary = "这是总结";
-        when(videoService.summarize(SAMPLE_SUBTITLE)).thenReturn(expectedSummary);
+        when(videoService.summarize(SAMPLE_SUBTITLE, null)).thenReturn(expectedSummary);
 
         // Act & Assert
         mockMvc.perform(post("/summarize")
@@ -156,7 +157,7 @@ class VideoControllerTest {
         // Arrange
         String question = "什么是 RAG？";
         String expectedAnswer = "RAG 是检索增强生成";
-        when(videoService.chat(SAMPLE_SUBTITLE, question)).thenReturn(expectedAnswer);
+        when(videoService.chat(SAMPLE_SUBTITLE, question, null)).thenReturn(expectedAnswer);
 
         // Act & Assert
         mockMvc.perform(post("/chat")
@@ -173,7 +174,7 @@ class VideoControllerTest {
     void extract_NormalRequest_ReturnsConcepts() throws Exception {
         // Arrange
         String jsonResponse = "[{\"timestampFrom\":\"00:00:00\",\"timestampTo\":\"00:01:00\",\"concept\":\"测试\",\"description\":\"描述\"}]";
-        when(videoService.extractConcepts(SAMPLE_SUBTITLE)).thenReturn(jsonResponse);
+        when(videoService.extractConcepts(SAMPLE_SUBTITLE, null)).thenReturn(jsonResponse);
 
         // Act & Assert
         mockMvc.perform(post("/extract")

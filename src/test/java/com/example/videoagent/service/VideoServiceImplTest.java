@@ -10,9 +10,14 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.ai.chat.client.ChatClient;
 
+import java.util.Map;
+
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyMap;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.contains;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 /**
@@ -36,15 +41,19 @@ class VideoServiceImplTest {
     @Mock
     private IntentClassificationService mockIntentService;
 
+    @Mock
+    private PromptTemplateService mockPromptTemplateService;
+
     private VideoServiceImpl videoService;
 
     private static final String SAMPLE_SUBTITLE = "[00:00:05] 测试字幕内容";
+    private static final String RENDERED_PROMPT = "渲染后的 Prompt 内容";
 
     @BeforeEach
     void setUp() {
         when(mockBuilder.defaultSystem(any(String.class))).thenReturn(mockBuilder);
         when(mockBuilder.build()).thenReturn(mockChatClient);
-        videoService = new VideoServiceImpl(mockBuilder, mockIntentService);
+        videoService = new VideoServiceImpl(mockBuilder, mockIntentService, mockPromptTemplateService);
     }
 
     // ==================== smartAsk 路由测试 ====================
@@ -58,6 +67,7 @@ class VideoServiceImplTest {
         String expectedAnswer = "这是总结内容";
 
         when(mockIntentService.classifyIntentWithCache(question)).thenReturn(intentResult);
+        when(mockPromptTemplateService.render(eq("summarize"), any(), anyMap())).thenReturn(RENDERED_PROMPT);
         when(mockChatClient.prompt()).thenReturn(mockRequestSpec);
         when(mockRequestSpec.user(any(String.class))).thenReturn(mockRequestSpec);
         when(mockRequestSpec.call()).thenReturn(mockResponseSpec);
@@ -69,6 +79,7 @@ class VideoServiceImplTest {
         // Assert
         assertEquals(expectedAnswer, result);
         verify(mockIntentService).classifyIntentWithCache(question);
+        verify(mockPromptTemplateService).render(eq("summarize"), any(), anyMap());
     }
 
     @Test
@@ -80,6 +91,7 @@ class VideoServiceImplTest {
         String expectedAnswer = "RAG 是检索增强生成";
 
         when(mockIntentService.classifyIntentWithCache(question)).thenReturn(intentResult);
+        when(mockPromptTemplateService.render(eq("chat"), any(), anyMap())).thenReturn(RENDERED_PROMPT);
         when(mockChatClient.prompt()).thenReturn(mockRequestSpec);
         when(mockRequestSpec.user(any(String.class))).thenReturn(mockRequestSpec);
         when(mockRequestSpec.call()).thenReturn(mockResponseSpec);
@@ -101,6 +113,7 @@ class VideoServiceImplTest {
         String expectedAnswer = "[{\"concept\": \"知识点1\"}]";
 
         when(mockIntentService.classifyIntentWithCache(question)).thenReturn(intentResult);
+        when(mockPromptTemplateService.render(eq("extract-concepts"), any(), anyMap())).thenReturn(RENDERED_PROMPT);
         when(mockChatClient.prompt()).thenReturn(mockRequestSpec);
         when(mockRequestSpec.user(any(String.class))).thenReturn(mockRequestSpec);
         when(mockRequestSpec.call()).thenReturn(mockResponseSpec);
@@ -122,6 +135,7 @@ class VideoServiceImplTest {
         String expectedAnswer = "[{\"quote\": \"金句1\"}]";
 
         when(mockIntentService.classifyIntentWithCache(question)).thenReturn(intentResult);
+        when(mockPromptTemplateService.render(eq("extract-quotes"), any(), anyMap())).thenReturn(RENDERED_PROMPT);
         when(mockChatClient.prompt()).thenReturn(mockRequestSpec);
         when(mockRequestSpec.user(any(String.class))).thenReturn(mockRequestSpec);
         when(mockRequestSpec.call()).thenReturn(mockResponseSpec);
@@ -143,6 +157,7 @@ class VideoServiceImplTest {
         String expectedAnswer = "{\"keyword\": \"Transformer\", \"occurrences\": []}";
 
         when(mockIntentService.classifyIntentWithCache(question)).thenReturn(intentResult);
+        when(mockPromptTemplateService.render(eq("search-keyword"), any(), anyMap())).thenReturn(RENDERED_PROMPT);
         when(mockChatClient.prompt()).thenReturn(mockRequestSpec);
         when(mockRequestSpec.user(any(String.class))).thenReturn(mockRequestSpec);
         when(mockRequestSpec.call()).thenReturn(mockResponseSpec);
@@ -166,6 +181,7 @@ class VideoServiceImplTest {
         String expectedAnswer = "搜索结果";
 
         when(mockIntentService.classifyIntentWithCache(question)).thenReturn(intentResult);
+        when(mockPromptTemplateService.render(eq("search-keyword"), any(), anyMap())).thenReturn(RENDERED_PROMPT);
         when(mockChatClient.prompt()).thenReturn(mockRequestSpec);
         when(mockRequestSpec.user(any(String.class))).thenReturn(mockRequestSpec);
         when(mockRequestSpec.call()).thenReturn(mockResponseSpec);
@@ -174,8 +190,12 @@ class VideoServiceImplTest {
         // Act
         videoService.smartAsk(SAMPLE_SUBTITLE, question);
 
-        // Assert - 验证 prompt 中包含提取的关键词 "Transformer"
-        verify(mockRequestSpec).user(contains("Transformer"));
+        // Assert - 验证 render 被调用时 keyword 参数为 "Transformer"
+        verify(mockPromptTemplateService).render(
+                eq("search-keyword"),
+                any(),
+                argThat(map -> "Transformer".equals(map.get("keyword")))
+        );
     }
 
     @Test
@@ -187,6 +207,7 @@ class VideoServiceImplTest {
         String expectedAnswer = "搜索结果";
 
         when(mockIntentService.classifyIntentWithCache(question)).thenReturn(intentResult);
+        when(mockPromptTemplateService.render(eq("search-keyword"), any(), anyMap())).thenReturn(RENDERED_PROMPT);
         when(mockChatClient.prompt()).thenReturn(mockRequestSpec);
         when(mockRequestSpec.user(any(String.class))).thenReturn(mockRequestSpec);
         when(mockRequestSpec.call()).thenReturn(mockResponseSpec);
@@ -196,7 +217,11 @@ class VideoServiceImplTest {
         videoService.smartAsk(SAMPLE_SUBTITLE, question);
 
         // Assert
-        verify(mockRequestSpec).user(contains("搜索关键词：RAG"));
+        verify(mockPromptTemplateService).render(
+                eq("search-keyword"),
+                any(),
+                argThat(map -> "RAG".equals(map.get("keyword")))
+        );
     }
 
     @Test
@@ -208,6 +233,7 @@ class VideoServiceImplTest {
         String expectedAnswer = "搜索结果";
 
         when(mockIntentService.classifyIntentWithCache(question)).thenReturn(intentResult);
+        when(mockPromptTemplateService.render(eq("search-keyword"), any(), anyMap())).thenReturn(RENDERED_PROMPT);
         when(mockChatClient.prompt()).thenReturn(mockRequestSpec);
         when(mockRequestSpec.user(any(String.class))).thenReturn(mockRequestSpec);
         when(mockRequestSpec.call()).thenReturn(mockResponseSpec);
@@ -217,7 +243,11 @@ class VideoServiceImplTest {
         videoService.smartAsk(SAMPLE_SUBTITLE, question);
 
         // Assert
-        verify(mockRequestSpec).user(contains("搜索关键词：微服务"));
+        verify(mockPromptTemplateService).render(
+                eq("search-keyword"),
+                any(),
+                argThat(map -> "微服务".equals(map.get("keyword")))
+        );
     }
 
     @Test
@@ -229,6 +259,7 @@ class VideoServiceImplTest {
         String expectedAnswer = "搜索结果";
 
         when(mockIntentService.classifyIntentWithCache(question)).thenReturn(intentResult);
+        when(mockPromptTemplateService.render(eq("search-keyword"), any(), anyMap())).thenReturn(RENDERED_PROMPT);
         when(mockChatClient.prompt()).thenReturn(mockRequestSpec);
         when(mockRequestSpec.user(any(String.class))).thenReturn(mockRequestSpec);
         when(mockRequestSpec.call()).thenReturn(mockResponseSpec);
@@ -238,7 +269,11 @@ class VideoServiceImplTest {
         videoService.smartAsk(SAMPLE_SUBTITLE, question);
 
         // Assert - 关键词为空时使用原问题
-        verify(mockRequestSpec).user(contains("搜索关键词：搜索"));
+        verify(mockPromptTemplateService).render(
+                eq("search-keyword"),
+                any(),
+                argThat(map -> "搜索".equals(map.get("keyword")))
+        );
     }
 
     // ==================== extractQuotes 测试 ====================
@@ -249,6 +284,7 @@ class VideoServiceImplTest {
         // Arrange
         String expectedAnswer = "[{\"timestamp\": \"00:05:20\", \"quote\": \"金句\"}]";
 
+        when(mockPromptTemplateService.render(eq("extract-quotes"), any(), anyMap())).thenReturn(RENDERED_PROMPT);
         when(mockChatClient.prompt()).thenReturn(mockRequestSpec);
         when(mockRequestSpec.user(any(String.class))).thenReturn(mockRequestSpec);
         when(mockRequestSpec.call()).thenReturn(mockResponseSpec);
@@ -259,6 +295,11 @@ class VideoServiceImplTest {
 
         // Assert
         assertEquals(expectedAnswer, result);
+        verify(mockPromptTemplateService).render(
+                eq("extract-quotes"),
+                any(),
+                argThat(map -> SAMPLE_SUBTITLE.equals(map.get("subtitle")))
+        );
     }
 
     // ==================== searchKeyword 测试 ====================
@@ -270,6 +311,7 @@ class VideoServiceImplTest {
         String keyword = "Transformer";
         String expectedAnswer = "{\"keyword\": \"Transformer\", \"occurrences\": []}";
 
+        when(mockPromptTemplateService.render(eq("search-keyword"), any(), anyMap())).thenReturn(RENDERED_PROMPT);
         when(mockChatClient.prompt()).thenReturn(mockRequestSpec);
         when(mockRequestSpec.user(any(String.class))).thenReturn(mockRequestSpec);
         when(mockRequestSpec.call()).thenReturn(mockResponseSpec);
@@ -280,5 +322,83 @@ class VideoServiceImplTest {
 
         // Assert
         assertEquals(expectedAnswer, result);
+        verify(mockPromptTemplateService).render(
+                eq("search-keyword"),
+                any(),
+                argThat(map -> keyword.equals(map.get("keyword")) && SAMPLE_SUBTITLE.equals(map.get("subtitle")))
+        );
+    }
+
+    // ==================== promptVersion 参数测试 ====================
+
+    @Test
+    @DisplayName("summarize - 使用指定版本渲染 Prompt")
+    void summarize_WithPromptVersion_UsesSpecifiedVersion() {
+        // Arrange
+        String promptVersion = "v2";
+        String expectedAnswer = "总结内容";
+
+        when(mockPromptTemplateService.render(eq("summarize"), eq(promptVersion), anyMap())).thenReturn(RENDERED_PROMPT);
+        when(mockChatClient.prompt()).thenReturn(mockRequestSpec);
+        when(mockRequestSpec.user(any(String.class))).thenReturn(mockRequestSpec);
+        when(mockRequestSpec.call()).thenReturn(mockResponseSpec);
+        when(mockResponseSpec.content()).thenReturn(expectedAnswer);
+
+        // Act
+        String result = videoService.summarize(SAMPLE_SUBTITLE, promptVersion);
+
+        // Assert
+        assertEquals(expectedAnswer, result);
+        verify(mockPromptTemplateService).render(eq("summarize"), eq(promptVersion), anyMap());
+    }
+
+    @Test
+    @DisplayName("chat - 使用指定版本渲染 Prompt")
+    void chat_WithPromptVersion_UsesSpecifiedVersion() {
+        // Arrange
+        String promptVersion = "v2";
+        String question = "什么是 RAG？";
+        String expectedAnswer = "RAG 是检索增强生成";
+
+        when(mockPromptTemplateService.render(eq("chat"), eq(promptVersion), anyMap())).thenReturn(RENDERED_PROMPT);
+        when(mockChatClient.prompt()).thenReturn(mockRequestSpec);
+        when(mockRequestSpec.user(any(String.class))).thenReturn(mockRequestSpec);
+        when(mockRequestSpec.call()).thenReturn(mockResponseSpec);
+        when(mockResponseSpec.content()).thenReturn(expectedAnswer);
+
+        // Act
+        String result = videoService.chat(SAMPLE_SUBTITLE, question, promptVersion);
+
+        // Assert
+        assertEquals(expectedAnswer, result);
+        verify(mockPromptTemplateService).render(
+                eq("chat"),
+                eq(promptVersion),
+                argThat(map -> SAMPLE_SUBTITLE.equals(map.get("subtitle")) && question.equals(map.get("question")))
+        );
+    }
+
+    @Test
+    @DisplayName("smartAsk - 使用指定版本渲染 Prompt")
+    void smartAsk_WithPromptVersion_UsesSpecifiedVersion() {
+        // Arrange
+        String promptVersion = "v2";
+        String question = "总结一下";
+        IntentResult intentResult = new IntentResult(UserIntent.SUMMARIZE, 0.95);
+        String expectedAnswer = "这是总结内容";
+
+        when(mockIntentService.classifyIntentWithCache(question)).thenReturn(intentResult);
+        when(mockPromptTemplateService.render(eq("summarize"), eq(promptVersion), anyMap())).thenReturn(RENDERED_PROMPT);
+        when(mockChatClient.prompt()).thenReturn(mockRequestSpec);
+        when(mockRequestSpec.user(any(String.class))).thenReturn(mockRequestSpec);
+        when(mockRequestSpec.call()).thenReturn(mockResponseSpec);
+        when(mockResponseSpec.content()).thenReturn(expectedAnswer);
+
+        // Act
+        String result = videoService.smartAsk(SAMPLE_SUBTITLE, question, promptVersion);
+
+        // Assert
+        assertEquals(expectedAnswer, result);
+        verify(mockPromptTemplateService).render(eq("summarize"), eq(promptVersion), anyMap());
     }
 }

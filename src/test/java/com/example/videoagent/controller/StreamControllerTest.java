@@ -17,6 +17,7 @@ import java.time.Duration;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -45,7 +46,7 @@ class StreamControllerTest {
     void streamAsk_ReturnsSseContentType() throws Exception {
         // Arrange
         String question = "什么是提示工程？";
-        when(videoService.smartAskStream(SAMPLE_SUBTITLE, question))
+        when(videoService.smartAskStream(SAMPLE_SUBTITLE, question, null))
                 .thenReturn(Flux.just("测试", "回答"));
 
         // Act & Assert
@@ -65,7 +66,7 @@ class StreamControllerTest {
         Flux<String> responseFlux = Flux.just("第一块", "第二块", "第三块")
                 .delayElements(Duration.ofMillis(10));
 
-        when(videoService.smartAskStream(SAMPLE_SUBTITLE, question))
+        when(videoService.smartAskStream(SAMPLE_SUBTITLE, question, null))
                 .thenReturn(responseFlux);
 
         // Act
@@ -89,7 +90,7 @@ class StreamControllerTest {
     void streamAsk_EmptyStream_CompletesSuccessfully() throws Exception {
         // Arrange
         String question = "空问题";
-        when(videoService.smartAskStream(SAMPLE_SUBTITLE, question))
+        when(videoService.smartAskStream(SAMPLE_SUBTITLE, question, null))
                 .thenReturn(Flux.empty());
 
         // Act & Assert
@@ -106,7 +107,7 @@ class StreamControllerTest {
     void streamAsk_ServiceError_PropagatesError() throws Exception {
         // Arrange
         String question = "错误问题";
-        when(videoService.smartAskStream(SAMPLE_SUBTITLE, question))
+        when(videoService.smartAskStream(SAMPLE_SUBTITLE, question, null))
                 .thenReturn(Flux.error(new RuntimeException("AI 服务异常")));
 
         // Act & Assert
@@ -124,7 +125,7 @@ class StreamControllerTest {
         // Arrange
         String question = "什么是 RAG？";
         String encodedQuestion = "什么是%20RAG%EF%BC%9F";
-        when(videoService.smartAskStream(any(), any()))
+        when(videoService.smartAskStream(any(), any(), any()))
                 .thenReturn(Flux.just("回答"));
 
         // Act & Assert
@@ -141,7 +142,7 @@ class StreamControllerTest {
         // Arrange
         String longSubtitle = "很长的字幕内容".repeat(1000);
         String question = "总结";
-        when(videoService.smartAskStream(longSubtitle, question))
+        when(videoService.smartAskStream(longSubtitle, question, null))
                 .thenReturn(Flux.just("总结内容"));
 
         // Act & Assert

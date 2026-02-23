@@ -14,9 +14,12 @@ import reactor.test.StepVerifier;
 
 import java.time.Duration;
 import java.util.List;
+import java.util.Map;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyMap;
 import static org.mockito.ArgumentMatchers.contains;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 /**
@@ -40,15 +43,19 @@ class VideoServiceStreamTest {
     @Mock
     private IntentClassificationService mockIntentService;
 
+    @Mock
+    private PromptTemplateService mockPromptTemplateService;
+
     private VideoServiceImpl videoService;
 
     private static final String SAMPLE_SUBTITLE = "[00:00:05] 测试字幕内容";
+    private static final String RENDERED_PROMPT = "渲染后的 Prompt 内容";
 
     @BeforeEach
     void setUp() {
         when(mockBuilder.defaultSystem(any(String.class))).thenReturn(mockBuilder);
         when(mockBuilder.build()).thenReturn(mockChatClient);
-        videoService = new VideoServiceImpl(mockBuilder, mockIntentService);
+        videoService = new VideoServiceImpl(mockBuilder, mockIntentService, mockPromptTemplateService);
     }
 
     // ==================== smartAskStream 流式输出测试 ====================
@@ -62,6 +69,7 @@ class VideoServiceStreamTest {
         List<String> expectedChunks = List.of("提示工程", "是", "一种", "技术");
 
         when(mockIntentService.classifyIntentWithCache(question)).thenReturn(intentResult);
+        when(mockPromptTemplateService.render(eq("chat"), any(), anyMap())).thenReturn(RENDERED_PROMPT);
         when(mockChatClient.prompt()).thenReturn(mockRequestSpec);
         when(mockRequestSpec.user(any(String.class))).thenReturn(mockRequestSpec);
         when(mockRequestSpec.stream()).thenReturn(mockStreamResponseSpec);
@@ -85,6 +93,7 @@ class VideoServiceStreamTest {
         List<String> expectedChunks = List.of("这是", "总结", "内容");
 
         when(mockIntentService.classifyIntentWithCache(question)).thenReturn(intentResult);
+        when(mockPromptTemplateService.render(eq("summarize"), any(), anyMap())).thenReturn(RENDERED_PROMPT);
         when(mockChatClient.prompt()).thenReturn(mockRequestSpec);
         when(mockRequestSpec.user(any(String.class))).thenReturn(mockRequestSpec);
         when(mockRequestSpec.stream()).thenReturn(mockStreamResponseSpec);
@@ -99,7 +108,7 @@ class VideoServiceStreamTest {
                 .verifyComplete();
 
         // 验证使用了总结 prompt 模板
-        verify(mockRequestSpec).user(contains("总结"));
+        verify(mockPromptTemplateService).render(eq("summarize"), any(), anyMap());
     }
 
     @Test
@@ -111,6 +120,7 @@ class VideoServiceStreamTest {
         List<String> expectedChunks = List.of("RAG", "是", "检索增强生成");
 
         when(mockIntentService.classifyIntentWithCache(question)).thenReturn(intentResult);
+        when(mockPromptTemplateService.render(eq("chat"), any(), anyMap())).thenReturn(RENDERED_PROMPT);
         when(mockChatClient.prompt()).thenReturn(mockRequestSpec);
         when(mockRequestSpec.user(any(String.class))).thenReturn(mockRequestSpec);
         when(mockRequestSpec.stream()).thenReturn(mockStreamResponseSpec);
@@ -124,8 +134,8 @@ class VideoServiceStreamTest {
                 .expectNextSequence(expectedChunks)
                 .verifyComplete();
 
-        // 验证 prompt 中包含原始问题
-        verify(mockRequestSpec).user(contains(question));
+        // 验证使用了 chat 模板
+        verify(mockPromptTemplateService).render(eq("chat"), any(), anyMap());
     }
 
     @Test
@@ -137,6 +147,7 @@ class VideoServiceStreamTest {
         List<String> expectedChunks = List.of("搜索", "结果");
 
         when(mockIntentService.classifyIntentWithCache(question)).thenReturn(intentResult);
+        when(mockPromptTemplateService.render(eq("search-keyword"), any(), anyMap())).thenReturn(RENDERED_PROMPT);
         when(mockChatClient.prompt()).thenReturn(mockRequestSpec);
         when(mockRequestSpec.user(any(String.class))).thenReturn(mockRequestSpec);
         when(mockRequestSpec.stream()).thenReturn(mockStreamResponseSpec);
@@ -150,8 +161,8 @@ class VideoServiceStreamTest {
                 .expectNextSequence(expectedChunks)
                 .verifyComplete();
 
-        // 验证关键词 "Transformer" 被提取并包含在 prompt 中
-        verify(mockRequestSpec).user(contains("Transformer"));
+        // 验证使用了 search-keyword 模板
+        verify(mockPromptTemplateService).render(eq("search-keyword"), any(), anyMap());
     }
 
     @Test
@@ -164,6 +175,7 @@ class VideoServiceStreamTest {
         List<String> expectedChunks = List.of("思维链", "是", "CoT");
 
         when(mockIntentService.classifyIntentWithCache(question)).thenReturn(intentResult);
+        when(mockPromptTemplateService.render(eq("deep-qa"), any(), anyMap())).thenReturn(RENDERED_PROMPT);
         when(mockChatClient.prompt()).thenReturn(mockRequestSpec);
         when(mockRequestSpec.user(any(String.class))).thenReturn(mockRequestSpec);
         when(mockRequestSpec.stream()).thenReturn(mockStreamResponseSpec);
@@ -177,8 +189,8 @@ class VideoServiceStreamTest {
                 .expectNextSequence(expectedChunks)
                 .verifyComplete();
 
-        // 验证真实问题（不含前缀）包含在 prompt 中
-        verify(mockRequestSpec).user(contains(realQuestion));
+        // 验证使用了 deep-qa 模板
+        verify(mockPromptTemplateService).render(eq("deep-qa"), any(), anyMap());
     }
 
     @Test
@@ -189,6 +201,7 @@ class VideoServiceStreamTest {
         IntentResult intentResult = new IntentResult(UserIntent.QA, 0.88);
 
         when(mockIntentService.classifyIntentWithCache(question)).thenReturn(intentResult);
+        when(mockPromptTemplateService.render(eq("chat"), any(), anyMap())).thenReturn(RENDERED_PROMPT);
         when(mockChatClient.prompt()).thenReturn(mockRequestSpec);
         when(mockRequestSpec.user(any(String.class))).thenReturn(mockRequestSpec);
         when(mockRequestSpec.stream()).thenReturn(mockStreamResponseSpec);
@@ -211,6 +224,7 @@ class VideoServiceStreamTest {
         RuntimeException expectedError = new RuntimeException("AI 服务错误");
 
         when(mockIntentService.classifyIntentWithCache(question)).thenReturn(intentResult);
+        when(mockPromptTemplateService.render(eq("chat"), any(), anyMap())).thenReturn(RENDERED_PROMPT);
         when(mockChatClient.prompt()).thenReturn(mockRequestSpec);
         when(mockRequestSpec.user(any(String.class))).thenReturn(mockRequestSpec);
         when(mockRequestSpec.stream()).thenReturn(mockStreamResponseSpec);
