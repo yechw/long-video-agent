@@ -185,7 +185,7 @@ class StreamAskE2ETest {
         @Test
         @DisplayName("SSE endpoint should return correct content type")
         void sseEndpoint_ShouldReturnCorrectContentType() throws Exception {
-            when(videoService.smartAskStream(any(), any()))
+            when(videoService.smartAskStream(any(), any(), any()))
                     .thenReturn(Flux.just("测试"));
 
             mockMvc.perform(get("/stream/ask")
@@ -199,7 +199,7 @@ class StreamAskE2ETest {
         @Test
         @DisplayName("SSE endpoint should handle URL encoded parameters")
         void sseEndpoint_ShouldHandleUrlEncodedParams() throws Exception {
-            when(videoService.smartAskStream(any(), any()))
+            when(videoService.smartAskStream(any(), any(), any()))
                     .thenReturn(Flux.just("回答"));
 
             mockMvc.perform(get("/stream/ask")

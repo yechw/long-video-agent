@@ -85,7 +85,7 @@ class MarkdownRenderingE2ETest {
         @DisplayName("Smart answer should use markdown-content container")
         void smartAnswer_ShouldUseMarkdownContainer() throws Exception {
             String markdownAnswer = "# 标题\n\n这是**粗体**文本";
-            when(videoService.smartAsk(any(), any())).thenReturn(markdownAnswer);
+            when(videoService.smartAsk(any(), any(), any())).thenReturn(markdownAnswer);
 
             mockMvc.perform(post("/ask")
                     .param("subtitleContent", SAMPLE_SUBTITLE)
@@ -100,7 +100,7 @@ class MarkdownRenderingE2ETest {
         @DisplayName("Smart answer should have data-content attribute")
         void smartAnswer_ShouldHaveDataContentAttribute() throws Exception {
             String markdownAnswer = "# 标题";
-            when(videoService.smartAsk(any(), any())).thenReturn(markdownAnswer);
+            when(videoService.smartAsk(any(), any(), any())).thenReturn(markdownAnswer);
 
             mockMvc.perform(post("/ask")
                     .param("subtitleContent", SAMPLE_SUBTITLE)
@@ -114,7 +114,7 @@ class MarkdownRenderingE2ETest {
         @Test
         @DisplayName("Smart answer should have markdown-rendered div")
         void smartAnswer_ShouldHaveMarkdownRenderedDiv() throws Exception {
-            when(videoService.smartAsk(any(), any())).thenReturn("回答内容");
+            when(videoService.smartAsk(any(), any(), any())).thenReturn("回答内容");
 
             mockMvc.perform(post("/ask")
                     .param("subtitleContent", SAMPLE_SUBTITLE)
@@ -129,7 +129,7 @@ class MarkdownRenderingE2ETest {
         @DisplayName("Smart answer should NOT use pre tag for display")
         void smartAnswer_ShouldNotUsePreTag() throws Exception {
             String markdownAnswer = "# 标题";
-            when(videoService.smartAsk(any(), any())).thenReturn(markdownAnswer);
+            when(videoService.smartAsk(any(), any(), any())).thenReturn(markdownAnswer);
 
             // Verify that in smart answer section, pre tag is replaced with markdown container
             MvcResult result = mockMvc.perform(post("/ask")
@@ -160,7 +160,7 @@ class MarkdownRenderingE2ETest {
         @DisplayName("Summary should use markdown-content container")
         void summary_ShouldUseMarkdownContainer() throws Exception {
             String markdownSummary = "## 总结\n\n- 要点1\n- 要点2";
-            when(videoService.summarize(any())).thenReturn(markdownSummary);
+            when(videoService.summarize(any(), any())).thenReturn(markdownSummary);
 
             mockMvc.perform(post("/summarize")
                     .param("subtitleContent", SAMPLE_SUBTITLE))
@@ -173,7 +173,7 @@ class MarkdownRenderingE2ETest {
         @Test
         @DisplayName("Summary should have markdown-rendered div")
         void summary_ShouldHaveMarkdownRenderedDiv() throws Exception {
-            when(videoService.summarize(any())).thenReturn("总结内容");
+            when(videoService.summarize(any(), any())).thenReturn("总结内容");
 
             mockMvc.perform(post("/summarize")
                     .param("subtitleContent", SAMPLE_SUBTITLE))
@@ -193,7 +193,7 @@ class MarkdownRenderingE2ETest {
         @Test
         @DisplayName("Regular chat should still use pre tag (not markdown)")
         void regularChat_ShouldUsePreTag() throws Exception {
-            when(videoService.chat(any(), any())).thenReturn("普通回答");
+            when(videoService.chat(any(), any(), any())).thenReturn("普通回答");
 
             MvcResult result = mockMvc.perform(post("/chat")
                     .param("subtitleContent", SAMPLE_SUBTITLE)
@@ -266,7 +266,7 @@ class MarkdownRenderingE2ETest {
         @DisplayName("Code block in smart answer should be properly escaped")
         void codeBlockInSmartAnswer_ShouldBeEscaped() throws Exception {
             String markdownWithCode = "代码示例:\n```java\nSystem.out.println(\"Hello\");\n```";
-            when(videoService.smartAsk(any(), any())).thenReturn(markdownWithCode);
+            when(videoService.smartAsk(any(), any(), any())).thenReturn(markdownWithCode);
 
             MvcResult result = mockMvc.perform(post("/ask")
                     .param("subtitleContent", SAMPLE_SUBTITLE)

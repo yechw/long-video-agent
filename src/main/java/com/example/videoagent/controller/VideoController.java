@@ -74,10 +74,11 @@ public class VideoController {
     @PostMapping("/summarize")
     public String summarize(
             @RequestParam("subtitleContent") String subtitleContent,
+            @RequestParam(value = "promptVersion", required = false) String promptVersion,
             Model model) {
 
         try {
-            String summary = videoService.summarize(subtitleContent);
+            String summary = videoService.summarize(subtitleContent, promptVersion);
 
             model.addAttribute("subtitleLoaded", true);
             model.addAttribute("subtitleContent", subtitleContent);
@@ -95,10 +96,11 @@ public class VideoController {
     public String chat(
             @RequestParam("subtitleContent") String subtitleContent,
             @RequestParam("question") String question,
+            @RequestParam(value = "promptVersion", required = false) String promptVersion,
             Model model) {
 
         try {
-            String answer = videoService.chat(subtitleContent, question);
+            String answer = videoService.chat(subtitleContent, question, promptVersion);
 
             model.addAttribute("subtitleLoaded", true);
             model.addAttribute("subtitleContent", subtitleContent);
@@ -172,10 +174,11 @@ public class VideoController {
     @PostMapping("/extract")
     public String extractConcepts(
             @RequestParam("subtitleContent") String subtitleContent,
+            @RequestParam(value = "promptVersion", required = false) String promptVersion,
             Model model) {
 
         try {
-            String jsonResponse = videoService.extractConcepts(subtitleContent);
+            String jsonResponse = videoService.extractConcepts(subtitleContent, promptVersion);
 
             // 解析 JSON 为 List<Concept>
             ObjectMapper mapper = new ObjectMapper();
@@ -216,11 +219,12 @@ public class VideoController {
             @RequestParam("subtitleContent") String subtitleContent,
             @RequestParam("question") String question,
             @RequestParam(value = "debug", required = false, defaultValue = "false") Boolean debug,
+            @RequestParam(value = "promptVersion", required = false) String promptVersion,
             Model model) {
 
         try {
             // 执行智能问答
-            String answer = videoService.smartAsk(subtitleContent, question);
+            String answer = videoService.smartAsk(subtitleContent, question, promptVersion);
 
             model.addAttribute("subtitleLoaded", true);
             model.addAttribute("subtitleContent", subtitleContent);
@@ -249,7 +253,8 @@ public class VideoController {
     @GetMapping(value = "/stream/ask", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public SseEmitter smartAskStream(
             @RequestParam("subtitleContent") String subtitleContent,
-            @RequestParam("question") String question) {
+            @RequestParam("question") String question,
+            @RequestParam(value = "promptVersion", required = false) String promptVersion) {
 
         SseEmitter emitter = new SseEmitter(60_000L); // 60秒超时
 
@@ -263,7 +268,7 @@ public class VideoController {
         emitter.onError(e -> log.error("SSE error", e));
 
         // 订阅 Flux 流并推送到 SseEmitter
-        videoService.smartAskStream(subtitleContent, question)
+        videoService.smartAskStream(subtitleContent, question, promptVersion)
             .publishOn(Schedulers.boundedElastic())
             .doOnNext(chunk -> {
                 try {

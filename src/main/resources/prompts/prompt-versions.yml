@@ -1,0 +1,53 @@
+# Prompt 版本配置
+prompts:
+  summarize:
+    default: v1
+    versions:
+      v1:
+        description: 原始版本，Few-Shot 示例
+        created: 2026-02-17
+      v2:
+        description: 优化版本，待测试
+        created: 2026-02-22
+
+  chat:
+    default: v1
+    versions:
+      v1:
+        description: 问答模板，支持时间戳引用
+        created: 2026-02-17
+
+  extract-concepts:
+    default: v1
+    versions:
+      v1:
+        description: 知识点提取，JSON 输出
+        created: 2026-02-17
+
+  intent-classification:
+    default: v1
+    versions:
+      v1:
+        description: 意图分类器
+        created: 2026-02-17
+
+  extract-quotes:
+    default: v1
+    versions:
+      v1:
+        description: 金句提取
+        created: 2026-02-17
+
+  search-keyword:
+    default: v1
+    versions:
+      v1:
+        description: 关键词搜索
+        created: 2026-02-17
+
+  deep-qa:
+    default: v1
+    versions:
+      v1:
+        description: 深度分析，CoT 思维链
+        created: 2026-02-18
