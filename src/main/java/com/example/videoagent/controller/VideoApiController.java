@@ -196,4 +196,72 @@ public class VideoApiController {
             return VideoResponse.error("搜索失败: " + e.getMessage());
         }
     }
+
+    /**
+     * 智能问答（自动意图分类）
+     */
+    @PostMapping("/ask")
+    public SmartAskResponse smartAsk(
+            @RequestBody ChatRequest request,
+            @RequestParam(value = "debug", required = false, defaultValue = "false") Boolean debug) {
+        try {
+            String answer = videoService.smartAsk(
+                request.getSubtitleContent(), request.getQuestion());
+
+            if (Boolean.TRUE.equals(debug)) {
+                IntentResult intentResult = intentClassificationService
+                    .classifyIntentWithCache(request.getQuestion());
+                return new SmartAskResponse(
+                    intentResult.getIntent().name(),
+                    intentResult.getConfidence(),
+                    answer);
+            }
+            return new SmartAskResponse(answer);
+        } catch (Exception e) {
+            log.error("智能问答失败", e);
+            SmartAskResponse response = new SmartAskResponse();
+            response.setContent("智能问答失败: " + e.getMessage());
+            return response;
+        }
+    }
+
+    /**
+     * 流式智能问答（SSE）
+     */
+    @GetMapping(value = "/stream/ask", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    public SseEmitter smartAskStream(
+            @RequestParam("subtitleContent") String subtitleContent,
+            @RequestParam("question") String question) {
+
+        SseEmitter emitter = new SseEmitter(60_000L);
+
+        emitter.onTimeout(() -> {
+            log.info("SSE connection timeout");
+            emitter.complete();
+        });
+
+        emitter.onError(e -> log.error("SSE error", e));
+
+        videoService.smartAskStream(subtitleContent, question)
+            .publishOn(Schedulers.boundedElastic())
+            .doOnNext(chunk -> {
+                try {
+                    emitter.send(SseEmitter.event().data(chunk));
+                } catch (IOException e) {
+                    emitter.completeWithError(e);
+                }
+            })
+            .doOnComplete(emitter::complete)
+            .doOnError(error -> {
+                try {
+                    emitter.send(SseEmitter.event()
+                        .name("error")
+                        .data("生成失败: " + error.getMessage()));
+                    emitter.complete();
+                } catch (IOException ignored) {}
+            })
+            .subscribe();
+
+        return emitter;
+    }
 }
