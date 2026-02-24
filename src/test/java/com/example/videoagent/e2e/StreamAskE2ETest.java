@@ -10,20 +10,18 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
-import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.MvcResult;
 import reactor.core.publisher.Flux;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 /**
- * E2E tests for Streaming Output feature
- * Verifies that streaming UI elements and JavaScript are correctly rendered
+ * E2E tests for Vue SPA API Endpoints
+ * These tests verify the REST API that the Vue frontend uses
  */
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -40,139 +38,80 @@ class StreamAskE2ETest {
 
     private static final String SAMPLE_SUBTITLE = "[00:00:05] 测试字幕内容";
 
-    // ==================== Streaming UI Elements Tests ====================
-    // Note: These elements are only visible after subtitle is loaded
+    // ==================== Upload API Tests ====================
 
     @Nested
-    @DisplayName("Streaming UI Elements")
-    class StreamingUiElementsTests {
+    @DisplayName("Upload API")
+    class UploadApiTests {
 
         @Test
-        @DisplayName("Page with subtitle should contain stream ask button")
-        void pageWithSubtitle_ShouldContainStreamAskButton() throws Exception {
-            MockMultipartFile emptyFile = new MockMultipartFile(
-                "file", "", "text/plain", new byte[0]);
-
-            mockMvc.perform(multipart("/upload")
-                    .file(emptyFile)
-                    .param("useSample", "true"))
+        @DisplayName("Upload content API should return sample subtitle")
+        void uploadContentApi_ShouldReturnSampleSubtitle() throws Exception {
+            mockMvc.perform(post("/api/upload/content")
+                    .contentType(MediaType.TEXT_PLAIN)
+                    .content(""))
                 .andExpect(status().isOk())
-                .andExpect(content().string(
-                    org.hamcrest.Matchers.containsString("id=\"streamAskBtn\"")
-                ))
-                .andExpect(content().string(
-                    org.hamcrest.Matchers.containsString("流式提问")
-                ));
-        }
-
-        @Test
-        @DisplayName("Page should contain stream response section (hidden)")
-        void page_ShouldContainStreamResponseSection() throws Exception {
-            // Stream response section is always present but hidden
-            mockMvc.perform(get("/"))
-                .andExpect(status().isOk())
-                .andExpect(content().string(
-                    org.hamcrest.Matchers.containsString("id=\"stream-response\"")
-                ))
-                .andExpect(content().string(
-                    org.hamcrest.Matchers.containsString("🌊 流式回答")
-                ));
-        }
-
-        @Test
-        @DisplayName("Page should contain stream answer display area")
-        void page_ShouldContainStreamAnswerArea() throws Exception {
-            mockMvc.perform(get("/"))
-                .andExpect(status().isOk())
-                .andExpect(content().string(
-                    org.hamcrest.Matchers.containsString("id=\"stream-answer\"")
-                ))
-                .andExpect(content().string(
-                    org.hamcrest.Matchers.containsString("id=\"stream-question\"")
-                ))
-                .andExpect(content().string(
-                    org.hamcrest.Matchers.containsString("id=\"stream-status\"")
-                ));
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.content").exists());
         }
     }
 
-    // ==================== EventSource JavaScript Tests ====================
+    // ==================== Summarize API Tests ====================
 
     @Nested
-    @DisplayName("EventSource JavaScript")
-    class EventSourceJavaScriptTests {
+    @DisplayName("Summarize API")
+    class SummarizeApiTests {
 
         @Test
-        @DisplayName("Page should contain initStreamAsk function")
-        void page_ShouldContainInitStreamAskFunction() throws Exception {
-            mockMvc.perform(get("/"))
-                .andExpect(status().isOk())
-                .andExpect(content().string(
-                    org.hamcrest.Matchers.containsString("function initStreamAsk()")
-                ));
-        }
+        @DisplayName("Summarize API should work")
+        void summarizeApi_ShouldWork() throws Exception {
+            when(videoService.summarize(any())).thenReturn("测试摘要");
 
-        @Test
-        @DisplayName("Page should contain askStream function")
-        void page_ShouldContainAskStreamFunction() throws Exception {
-            mockMvc.perform(get("/"))
+            mockMvc.perform(post("/api/summarize")
+                    .contentType(MediaType.TEXT_PLAIN)
+                    .content(SAMPLE_SUBTITLE))
                 .andExpect(status().isOk())
-                .andExpect(content().string(
-                    org.hamcrest.Matchers.containsString("function askStream(")
-                ));
-        }
-
-        @Test
-        @DisplayName("Page should use EventSource API")
-        void page_ShouldUseEventSourceApi() throws Exception {
-            mockMvc.perform(get("/"))
-                .andExpect(status().isOk())
-                .andExpect(content().string(
-                    org.hamcrest.Matchers.containsString("new EventSource(")
-                ))
-                .andExpect(content().string(
-                    org.hamcrest.Matchers.containsString("eventSource.onmessage")
-                ))
-                .andExpect(content().string(
-                    org.hamcrest.Matchers.containsString("eventSource.onerror")
-                ));
-        }
-
-        @Test
-        @DisplayName("EventSource should connect to /stream/ask endpoint")
-        void eventSource_ShouldConnectToStreamAskEndpoint() throws Exception {
-            mockMvc.perform(get("/"))
-                .andExpect(status().isOk())
-                .andExpect(content().string(
-                    org.hamcrest.Matchers.containsString("/stream/ask?")
-                ));
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.content").value("测试摘要"));
         }
     }
 
-    // ==================== Streaming Response Display Tests ====================
+    // ==================== Chat API Tests ====================
 
     @Nested
-    @DisplayName("Streaming Response Display")
-    class StreamingResponseDisplayTests {
+    @DisplayName("Chat API")
+    class ChatApiTests {
 
         @Test
-        @DisplayName("Stream response section should be hidden initially")
-        void streamResponseSection_ShouldBeHiddenInitially() throws Exception {
-            mockMvc.perform(get("/"))
+        @DisplayName("Chat API should work")
+        void chatApi_ShouldWork() throws Exception {
+            when(videoService.chat(any(), any())).thenReturn("测试回答");
+
+            mockMvc.perform(post("/api/chat")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content("{\"subtitleContent\":\"test\",\"question\":\"test question\"}"))
                 .andExpect(status().isOk())
-                .andExpect(content().string(
-                    org.hamcrest.Matchers.containsString("id=\"stream-response\" style=\"display: none;\"")
-                ));
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.content").value("测试回答"));
         }
+    }
+
+    // ==================== Smart Ask API Tests ====================
+
+    @Nested
+    @DisplayName("Smart Ask API")
+    class SmartAskApiTests {
 
         @Test
-        @DisplayName("Stream response should use markdown-content container")
-        void streamResponse_ShouldUseMarkdownContainer() throws Exception {
-            mockMvc.perform(get("/"))
+        @DisplayName("Smart ask API should work")
+        void smartAskApi_ShouldWork() throws Exception {
+            when(videoService.smartAsk(any(), any())).thenReturn("智能回答");
+
+            mockMvc.perform(post("/api/ask")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content("{\"subtitleContent\":\"test\",\"question\":\"test question\"}"))
                 .andExpect(status().isOk())
-                .andExpect(content().string(
-                    org.hamcrest.Matchers.containsString("id=\"stream-answer\"")
-                ));
+                .andExpect(jsonPath("$.content").value("智能回答"));
         }
     }
 
@@ -185,10 +124,10 @@ class StreamAskE2ETest {
         @Test
         @DisplayName("SSE endpoint should return correct content type")
         void sseEndpoint_ShouldReturnCorrectContentType() throws Exception {
-            when(videoService.smartAskStream(any(), any(), any()))
+            when(videoService.smartAskStream(any(), any()))
                     .thenReturn(Flux.just("测试"));
 
-            mockMvc.perform(get("/stream/ask")
+            mockMvc.perform(get("/api/stream/ask")
                     .param("subtitleContent", SAMPLE_SUBTITLE)
                     .param("question", "测试问题")
                     .accept(MediaType.TEXT_EVENT_STREAM_VALUE))
@@ -199,10 +138,10 @@ class StreamAskE2ETest {
         @Test
         @DisplayName("SSE endpoint should handle URL encoded parameters")
         void sseEndpoint_ShouldHandleUrlEncodedParams() throws Exception {
-            when(videoService.smartAskStream(any(), any(), any()))
+            when(videoService.smartAskStream(any(), any()))
                     .thenReturn(Flux.just("回答"));
 
-            mockMvc.perform(get("/stream/ask")
+            mockMvc.perform(get("/api/stream/ask")
                     .param("subtitleContent", SAMPLE_SUBTITLE)
                     .param("question", "什么是 RAG？")
                     .accept(MediaType.TEXT_EVENT_STREAM_VALUE))
@@ -210,59 +149,53 @@ class StreamAskE2ETest {
         }
     }
 
-    // ==================== Button Placement Tests ====================
+    // ==================== Extract API Tests ====================
 
     @Nested
-    @DisplayName("Button Placement")
-    class ButtonPlacementTests {
+    @DisplayName("Extract API")
+    class ExtractApiTests {
 
         @Test
-        @DisplayName("Stream button should be in smart ask section")
-        void streamButton_ShouldBeInSmartAskSection() throws Exception {
-            MockMultipartFile emptyFile = new MockMultipartFile(
-                "file", "", "text/plain", new byte[0]);
+        @DisplayName("API should support concept extraction")
+        void api_ShouldSupportConceptExtraction() throws Exception {
+            when(videoService.extractConcepts(any())).thenReturn("[{\"concept\":\"测试概念\"}]");
 
-            MvcResult result = mockMvc.perform(multipart("/upload")
-                    .file(emptyFile)
-                    .param("useSample", "true"))
+            mockMvc.perform(post("/api/extract")
+                    .contentType(MediaType.TEXT_PLAIN)
+                    .content(SAMPLE_SUBTITLE))
                 .andExpect(status().isOk())
-                .andReturn();
-
-            String content = result.getResponse().getContentAsString();
-
-            // Find smart ask section
-            int smartAskSection = content.indexOf("🤖 智能问答");
-            if (smartAskSection < 0) {
-                // Try without emoji for safety
-                smartAskSection = content.indexOf("智能问答");
-            }
-            int smartAskEnd = content.indexOf("</section>", smartAskSection);
-
-            // Only verify if section found
-            if (smartAskSection >= 0 && smartAskEnd > smartAskSection) {
-                String smartAskBlock = content.substring(smartAskSection, smartAskEnd);
-
-                // Verify both buttons are in this section
-                org.hamcrest.MatcherAssert.assertThat(smartAskBlock,
-                    org.hamcrest.Matchers.containsString("智能回答"));
-                org.hamcrest.MatcherAssert.assertThat(smartAskBlock,
-                    org.hamcrest.Matchers.containsString("流式提问"));
-            }
+                .andExpect(jsonPath("$.success").value(true));
         }
 
         @Test
-        @DisplayName("Stream button should have secondary style")
-        void streamButton_ShouldHaveSecondaryStyle() throws Exception {
-            MockMultipartFile emptyFile = new MockMultipartFile(
-                "file", "", "text/plain", new byte[0]);
+        @DisplayName("API should support quote extraction")
+        void api_ShouldSupportQuoteExtraction() throws Exception {
+            when(videoService.extractQuotes(any())).thenReturn("[{\"quote\":\"测试金句\"}]");
 
-            mockMvc.perform(multipart("/upload")
-                    .file(emptyFile)
-                    .param("useSample", "true"))
+            mockMvc.perform(post("/api/quotes")
+                    .contentType(MediaType.TEXT_PLAIN)
+                    .content(SAMPLE_SUBTITLE))
                 .andExpect(status().isOk())
-                .andExpect(content().string(
-                    org.hamcrest.Matchers.containsString("btn btn-secondary")
-                ));
+                .andExpect(jsonPath("$.success").value(true));
+        }
+    }
+
+    // ==================== Search API Tests ====================
+
+    @Nested
+    @DisplayName("Search API")
+    class SearchApiTests {
+
+        @Test
+        @DisplayName("API should support keyword search")
+        void api_ShouldSupportKeywordSearch() throws Exception {
+            when(videoService.searchKeyword(any(), any())).thenReturn("[{\"timestamp\":\"00:00:05\"}]");
+
+            mockMvc.perform(post("/api/search")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content("{\"subtitleContent\":\"test\",\"keyword\":\"关键词\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true));
         }
     }
 }
