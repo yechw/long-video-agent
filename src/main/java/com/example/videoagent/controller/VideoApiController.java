@@ -125,4 +125,32 @@ public class VideoApiController {
                 来增强 AI 应用的知识检索能力。
                 """;
     }
+
+    /**
+     * 生成视频摘要
+     */
+    @PostMapping("/summarize")
+    public VideoResponse summarize(@RequestBody String subtitleContent) {
+        try {
+            String summary = videoService.summarize(subtitleContent);
+            return VideoResponse.success(summary);
+        } catch (Exception e) {
+            log.error("生成摘要失败", e);
+            return VideoResponse.error("生成摘要失败: " + e.getMessage());
+        }
+    }
+
+    /**
+     * 基础问答
+     */
+    @PostMapping("/chat")
+    public VideoResponse chat(@RequestBody ChatRequest request) {
+        try {
+            String answer = videoService.chat(request.getSubtitleContent(), request.getQuestion());
+            return VideoResponse.success(answer);
+        } catch (Exception e) {
+            log.error("问答失败", e);
+            return VideoResponse.error("问答失败: " + e.getMessage());
+        }
+    }
 }
