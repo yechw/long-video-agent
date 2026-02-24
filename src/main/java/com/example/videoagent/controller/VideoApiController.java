@@ -153,4 +153,47 @@ public class VideoApiController {
             return VideoResponse.error("问答失败: " + e.getMessage());
         }
     }
+
+    /**
+     * 提取知识概念
+     */
+    @PostMapping("/extract")
+    public VideoResponse extractConcepts(@RequestBody String subtitleContent) {
+        try {
+            String jsonResponse = videoService.extractConcepts(subtitleContent);
+            return VideoResponse.success(jsonResponse);
+        } catch (Exception e) {
+            log.error("提取知识点失败", e);
+            return VideoResponse.error("提取知识点失败: " + e.getMessage());
+        }
+    }
+
+    /**
+     * 提取金句
+     */
+    @PostMapping("/quotes")
+    public VideoResponse extractQuotes(@RequestBody String subtitleContent) {
+        try {
+            String jsonResponse = videoService.extractQuotes(subtitleContent);
+            return VideoResponse.success(jsonResponse);
+        } catch (Exception e) {
+            log.error("提取金句失败", e);
+            return VideoResponse.error("提取金句失败: " + e.getMessage());
+        }
+    }
+
+    /**
+     * 关键词搜索
+     */
+    @PostMapping("/search")
+    public VideoResponse searchKeyword(@RequestBody SearchRequest request) {
+        try {
+            String jsonResponse = videoService.searchKeyword(
+                request.getSubtitleContent(), request.getKeyword());
+            return VideoResponse.success(jsonResponse);
+        } catch (Exception e) {
+            log.error("搜索失败", e);
+            return VideoResponse.error("搜索失败: " + e.getMessage());
+        }
+    }
 }
