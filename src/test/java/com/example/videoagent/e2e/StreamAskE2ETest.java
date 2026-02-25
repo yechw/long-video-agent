@@ -15,7 +15,6 @@ import reactor.core.publisher.Flux;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -127,23 +126,23 @@ class StreamAskE2ETest {
             when(videoService.smartAskStream(any(), any()))
                     .thenReturn(Flux.just("测试"));
 
-            mockMvc.perform(get("/api/stream/ask")
-                    .param("subtitleContent", SAMPLE_SUBTITLE)
-                    .param("question", "测试问题")
+            mockMvc.perform(post("/api/stream/ask")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content("{\"subtitleContent\":\"" + SAMPLE_SUBTITLE + "\",\"question\":\"测试问题\"}")
                     .accept(MediaType.TEXT_EVENT_STREAM_VALUE))
                 .andExpect(status().isOk())
                 .andExpect(request().asyncStarted());
         }
 
         @Test
-        @DisplayName("SSE endpoint should handle URL encoded parameters")
-        void sseEndpoint_ShouldHandleUrlEncodedParams() throws Exception {
+        @DisplayName("SSE endpoint should handle JSON body with special characters")
+        void sseEndpoint_ShouldHandleJsonBodyWithSpecialChars() throws Exception {
             when(videoService.smartAskStream(any(), any()))
                     .thenReturn(Flux.just("回答"));
 
-            mockMvc.perform(get("/api/stream/ask")
-                    .param("subtitleContent", SAMPLE_SUBTITLE)
-                    .param("question", "什么是 RAG？")
+            mockMvc.perform(post("/api/stream/ask")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content("{\"subtitleContent\":\"" + SAMPLE_SUBTITLE + "\",\"question\":\"什么是 RAG？\"}")
                     .accept(MediaType.TEXT_EVENT_STREAM_VALUE))
                 .andExpect(status().isOk());
         }

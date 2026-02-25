@@ -68,7 +68,7 @@ export const videoApi = {
     return postJson<SmartAskResponse>(url, request)
   },
 
-  // 流式问答
+  // 流式问答（POST 请求，支持长字幕内容）
   streamAsk: (
     subtitleContent: string,
     question: string,
@@ -76,23 +76,52 @@ export const videoApi = {
     onError: (error: string) => void,
     onComplete: () => void
   ): (() => void) => {
-    const params = new URLSearchParams({ subtitleContent, question })
-    const eventSource = new EventSource(`${BASE_URL}/stream/ask?${params}`)
+    let aborted = false
 
-    eventSource.onmessage = (event) => {
-      if (event.data === '[DONE]') {
-        eventSource.close()
-        onComplete()
-      } else {
-        onMessage(event.data)
-      }
+    fetch(`${BASE_URL}/stream/ask`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ subtitleContent, question })
+    })
+      .then(async (response) => {
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}`)
+        }
+
+        const reader = response.body?.getReader()
+        if (!reader) {
+          throw new Error('No response body')
+        }
+
+        const decoder = new TextDecoder()
+
+        while (!aborted) {
+          const { done, value } = await reader.read()
+          if (done) break
+
+          const chunk = decoder.decode(value, { stream: true })
+          // SSE 格式: "data:内容\n\n"
+          const lines = chunk.split('\n')
+          for (const line of lines) {
+            if (line.startsWith('data:')) {
+              const data = line.slice(5)
+              if (data === '[DONE]') {
+                onComplete()
+              } else {
+                onMessage(data)
+              }
+            }
+          }
+        }
+      })
+      .catch((error) => {
+        if (!aborted) {
+          onError(error.message || '连接失败')
+        }
+      })
+
+    return () => {
+      aborted = true
     }
-
-    eventSource.onerror = () => {
-      onError('连接失败')
-      eventSource.close()
-    }
-
-    return () => eventSource.close()
   }
 }
