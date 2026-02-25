@@ -1,8 +1,8 @@
 【优化版问答模板】
 
 字幕内容：
-{subtitle}
+<subtitle>
 
-用户问题：{question}
+用户问题：<question>
 
 请基于以上视频字幕回答问题，并引用时间戳。

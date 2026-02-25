@@ -1,7 +1,6 @@
 package com.example.videoagent.service;
 
 import com.example.videoagent.config.PromptVersionConfig;
-import org.springframework.ai.chat.prompt.PromptTemplate;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
 
@@ -13,6 +12,8 @@ import java.util.concurrent.ConcurrentHashMap;
 /**
  * Prompt 模板服务
  * 加载、缓存、渲染 .st 模板文件
+ *
+ * 使用 < 和 > 作为模板变量分隔符，避免与 JSON 花括号冲突
  */
 @Service
 public class PromptTemplateService {
@@ -36,8 +37,14 @@ public class PromptTemplateService {
         String actualVersion = version != null ? version : versionConfig.getDefaultVersion(promptName);
         String templateContent = loadTemplate(promptName, actualVersion);
 
-        PromptTemplate promptTemplate = new PromptTemplate(templateContent);
-        return promptTemplate.render(params);
+        // 简单字符串替换：将 <variable> 替换为实际值
+        String result = templateContent;
+        for (Map.Entry<String, Object> entry : params.entrySet()) {
+            String placeholder = "<" + entry.getKey() + ">";
+            String value = entry.getValue() != null ? entry.getValue().toString() : "";
+            result = result.replace(placeholder, value);
+        }
+        return result;
     }
 
     /**
