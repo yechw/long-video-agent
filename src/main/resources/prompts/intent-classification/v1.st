@@ -24,4 +24,4 @@
 {"intent": "意图类型", "confidence": 0.0-1.0}
 
 【用户问题】
-{question}
+<question>
