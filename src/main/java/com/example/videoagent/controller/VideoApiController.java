@@ -226,12 +226,10 @@ public class VideoApiController {
     }
 
     /**
-     * 流式智能问答（SSE）
+     * 流式智能问答（SSE）- POST 版本，支持长字幕内容
      */
-    @GetMapping(value = "/stream/ask", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
-    public SseEmitter smartAskStream(
-            @RequestParam("subtitleContent") String subtitleContent,
-            @RequestParam("question") String question) {
+    @PostMapping(value = "/stream/ask", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    public SseEmitter smartAskStream(@RequestBody ChatRequest request) {
 
         SseEmitter emitter = new SseEmitter(60_000L);
 
@@ -242,7 +240,7 @@ public class VideoApiController {
 
         emitter.onError(e -> log.error("SSE error", e));
 
-        videoService.smartAskStream(subtitleContent, question)
+        videoService.smartAskStream(request.getSubtitleContent(), request.getQuestion())
             .publishOn(Schedulers.boundedElastic())
             .doOnNext(chunk -> {
                 try {
