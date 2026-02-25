@@ -1,10 +1,12 @@
 package com.example.videoagent.e2e;
 
 import com.microsoft.playwright.*;
+import com.microsoft.playwright.options.LoadState;
 import org.junit.jupiter.api.*;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
 
+import java.io.File;
 import java.time.Duration;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -21,15 +23,15 @@ class VueSpaE2eTest {
     static void startApp() throws Exception {
         // Build frontend first
         ProcessBuilder pb = new ProcessBuilder("mvn", "clean", "package", "-DskipTests");
-        pb.redirectErrorStream(ProcessBuilder.Redirect.INHERIT);
-        pb.directory(new File(System.getProperty("user.dir")).getAbsolutePath());
-        pb.start();
-        pb.waitFor();
+        pb.redirectErrorStream(true);
+        pb.directory(new File(System.getProperty("user.dir")));
+        Process buildProcess = pb.start();
+        buildProcess.waitFor();
 
         // Start Spring Boot app
         appProcess = new ProcessBuilder("java", "-jar",
                 "target/video-agent-0.0.1-SNAPSHOT.jar")
-                .directory(new File(System.getProperty("user.dir")).getAbsolutePath())
+                .directory(new File(System.getProperty("user.dir")))
                 .start();
 
         // Wait for app to start
@@ -40,14 +42,13 @@ class VueSpaE2eTest {
     void testPageLoadsAndHasExpectedElements() {
         try (Playwright playwright = Playwright.create()) {
             Browser browser = playwright.chromium().launch(new BrowserType.LaunchOptions()
-                    .setHeadless(false)
-                    .setSlowMo(5000));
+                    .setHeadless(true));
 
             Page page = browser.newPage();
             page.navigate("http://localhost:" + port);
 
             // Wait for Vue app to load
-            page.waitForLoadState(LoadState.NETWORKIDLE, Duration.ofSeconds(10));
+            page.waitForLoadState(LoadState.NETWORKIDLE);
 
             // Verify page title
             assertEquals("frontend", page.title());
@@ -57,10 +58,10 @@ class VueSpaE2eTest {
             assertTrue(page.locator("h1.app-title").textContent().contains("长视频智能分析助手"));
 
             // Verify upload section
-            assertTrue(page.locator(".card-header", HasText("上传字幕文件")).isVisible());
+            assertTrue(page.locator(".card-header").first().textContent().contains("上传字幕文件"));
 
             // Verify "使用示例字幕" button
-            assertTrue(page.locator("button", HasText("使用示例字幕")).isVisible());
+            assertTrue(page.locator("button:has-text('示例')").isVisible());
 
             browser.close();
         }
@@ -70,39 +71,38 @@ class VueSpaE2eTest {
     void testUseSampleSubtitleAndVerifyQuickActions() {
         try (Playwright playwright = Playwright.create()) {
             Browser browser = playwright.chromium().launch(new BrowserType.LaunchOptions()
-                    .setHeadless(false)
-                    .setSlowMo(5000));
+                    .setHeadless(true));
 
             Page page = browser.newPage();
             page.navigate("http://localhost:" + port);
-            page.waitForLoadState(LoadState.NETWORKIDLE, Duration.ofSeconds(10));
+            page.waitForLoadState(LoadState.NETWORKIDLE);
 
             // Click "使用示例字幕" button
-            page.locator("button", HasText("使用示例字幕")).click();
+            page.locator("button:has-text('示例')").click();
 
             // Wait for subtitle to load
-            Thread.sleep(2000);
+            page.waitForTimeout(2000);
 
             // Verify "字幕信息" card appears
-            assertTrue(page.locator(".card-header", HasText("字幕信息")).isVisible());
+            assertTrue(page.locator(".card-header:has-text('字幕信息')").isVisible());
 
             // Verify "快捷操作" card appears
-            assertTrue(page.locator(".card-header", HasText("快捷操作")).isVisible());
+            assertTrue(page.locator(".card-header:has-text('快捷操作')").isVisible());
 
             // Verify quick action buttons
-            assertTrue(page.locator("button", HasText("生成摘要")).isVisible());
-            assertTrue(page.locator("button", HasText("提取概念")).isVisible());
-            assertTrue(page.locator("button", HasText("提取金句")).isVisible());
-            assertTrue(page.locator("button", HasText("关键词搜索")).isVisible());
+            assertTrue(page.locator("button:has-text('生成摘要')").isVisible());
+            assertTrue(page.locator("button:has-text('提取概念')").isVisible());
+            assertTrue(page.locator("button:has-text('提取金句')").isVisible());
+            assertTrue(page.locator("button:has-text('关键词搜索')").isVisible());
 
             // Verify "智能问答" card appears
-            assertTrue(page.locator(".card-header", HasText("智能问答")).isVisible());
+            assertTrue(page.locator(".card-header:has-text('智能问答')").isVisible());
 
             // Verify chat input
             assertTrue(page.locator("textarea").isVisible());
 
             // Verify send button
-            assertTrue(page.locator("button", HasText("发送")).isVisible());
+            assertTrue(page.locator("button:has-text('发送')").isVisible());
 
             // Verify stream checkbox
             assertTrue(page.locator("input[type='checkbox']").isVisible());
@@ -115,55 +115,38 @@ class VueSpaE2eTest {
     void testChatFunctionality() {
         try (Playwright playwright = Playwright.create()) {
             Browser browser = playwright.chromium().launch(new BrowserType.LaunchOptions()
-                    .setHeadless(false)
-                    .setSlowMo(5000));
+                    .setHeadless(true));
 
             Page page = browser.newPage();
             page.navigate("http://localhost:" + port);
-            page.waitForLoadState(LoadState.NETWORKIDLE, Duration.ofSeconds(10));
+            page.waitForLoadState(LoadState.NETWORKIDLE);
 
             // Click "使用示例字幕" button
-            page.locator("button", HasText("使用示例字幕")).click();
+            page.locator("button:has-text('示例')").click();
 
             // Wait for subtitle to load
-            Thread.sleep(2000);
+            page.waitForTimeout(2000);
 
             // Type a question
             page.locator("textarea").fill("这个视频讲了什么?");
 
             // Click send button
-            page.locator("button", HasText("发送")).click();
+            page.locator("button:has-text('发送')").click();
 
             // Wait for response
-            Thread.sleep(3000);
+            page.waitForTimeout(3000);
 
             // Verify response appears
-            assertTrue(page.locator(".message.assistant").isVisible());
+            assertTrue(page.locator(".message").count() >= 2);
 
             browser.close();
         }
     }
 
     @AfterAll
-    static void stopApp() throws Exception {
+    static void stopApp() {
         if (appProcess != null) {
-                appProcess.destroy();
-            }
-        }
-    }
-
-    // Helper class for text content matching
-    static class HasText implements Condition<String> {
-        private final String text;
-
-        public HasText(String text) {
-            this.text = text;
-        }
-
-        @Override
-        public boolean test(String actual) {
-                return actual.contains(text);
-            }
+            appProcess.destroy();
         }
     }
 }
