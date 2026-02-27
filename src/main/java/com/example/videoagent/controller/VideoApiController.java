@@ -3,11 +3,15 @@ package com.example.videoagent.controller;
 import com.example.videoagent.dto.ChatRequest;
 import com.example.videoagent.dto.Concept;
 import com.example.videoagent.dto.IntentResult;
+import com.example.videoagent.dto.PromptOptimizeRequest;
+import com.example.videoagent.dto.PromptOptimizeResponse;
 import com.example.videoagent.dto.SearchRequest;
 import com.example.videoagent.dto.SmartAskResponse;
 import com.example.videoagent.dto.VideoResponse;
 import com.example.videoagent.service.IntentClassificationService;
+import com.example.videoagent.service.PromptOptimizeService;
 import com.example.videoagent.service.VideoService;
+import jakarta.validation.Valid;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
@@ -30,11 +34,14 @@ public class VideoApiController {
 
     private final VideoService videoService;
     private final IntentClassificationService intentClassificationService;
+    private final PromptOptimizeService promptOptimizeService;
 
     public VideoApiController(VideoService videoService,
-                              IntentClassificationService intentClassificationService) {
+                              IntentClassificationService intentClassificationService,
+                              PromptOptimizeService promptOptimizeService) {
         this.videoService = videoService;
         this.intentClassificationService = intentClassificationService;
+        this.promptOptimizeService = promptOptimizeService;
     }
 
     /**
@@ -261,5 +268,19 @@ public class VideoApiController {
             .subscribe();
 
         return emitter;
+    }
+
+    /**
+     * Prompt 优化
+     */
+    @PostMapping("/prompt/optimize")
+    public VideoResponse optimizePrompt(@Valid @RequestBody PromptOptimizeRequest request) {
+        try {
+            PromptOptimizeResponse result = promptOptimizeService.optimize(request);
+            return VideoResponse.success(result);
+        } catch (Exception e) {
+            log.error("Prompt 优化失败", e);
+            return VideoResponse.error("优化失败: " + e.getMessage());
+        }
     }
 }
