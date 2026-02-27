@@ -10,7 +10,7 @@
       <div class="section">
         <label>原始 Prompt:</label>
         <el-input
-          v-model="originalPrompt"
+          :model-value="originalPrompt"
           type="textarea"
           :rows="4"
           readonly

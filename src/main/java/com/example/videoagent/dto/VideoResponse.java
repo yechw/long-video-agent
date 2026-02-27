@@ -10,6 +10,7 @@ public class VideoResponse {
     private String content;
     private String fileName;
     private int charCount;
+    private Object data;
 
     public VideoResponse() {}
 
@@ -23,6 +24,13 @@ public class VideoResponse {
     public static VideoResponse success(String message, String content) {
         VideoResponse response = success(content);
         response.setMessage(message);
+        return response;
+    }
+
+    public static VideoResponse successWithData(Object data) {
+        VideoResponse response = new VideoResponse();
+        response.setSuccess(true);
+        response.setData(data);
         return response;
     }
 
@@ -81,5 +89,13 @@ public class VideoResponse {
 
     public void setCharCount(int charCount) {
         this.charCount = charCount;
+    }
+
+    public Object getData() {
+        return data;
+    }
+
+    public void setData(Object data) {
+        this.data = data;
     }
 }

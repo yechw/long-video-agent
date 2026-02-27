@@ -277,7 +277,7 @@ public class VideoApiController {
     public VideoResponse optimizePrompt(@Valid @RequestBody PromptOptimizeRequest request) {
         try {
             PromptOptimizeResponse result = promptOptimizeService.optimize(request);
-            return VideoResponse.success(result);
+            return VideoResponse.successWithData(result);
         } catch (Exception e) {
             log.error("Prompt 优化失败", e);
             return VideoResponse.error("优化失败: " + e.getMessage());
