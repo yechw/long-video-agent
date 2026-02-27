@@ -2,6 +2,23 @@ import type { UploadResponse, VideoResponse, SmartAskResponse, ChatRequest, Sear
 
 const BASE_URL = '/api'
 
+export interface PromptOptimizeRequest {
+  originalPrompt: string;
+  optimizationGoal: 'CLEARER' | 'CONCISE' | 'STRICT' | 'COMPLETE' | 'CUSTOM';
+  customGoal?: string;
+}
+
+export interface PromptOptimizeResponse {
+  optimizedPrompt: string;
+  improvements: string[];
+}
+
+export interface ApiResponse<T> {
+  data: T;
+  success: boolean;
+  message?: string;
+}
+
 async function postJson<T>(url: string, body: unknown): Promise<T> {
   const response = await fetch(url, {
     method: 'POST',
@@ -123,5 +140,15 @@ export const videoApi = {
     return () => {
       aborted = true
     }
-  }
+  },
+
+  // 优化提示词
+  optimizePrompt: async (request: PromptOptimizeRequest): Promise<ApiResponse<PromptOptimizeResponse>> => {
+    const response = await fetch(`${BASE_URL}/prompt/optimize`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(request),
+    });
+    return response.json();
+  },
 }
