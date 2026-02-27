@@ -51,3 +51,10 @@ prompts:
       v1:
         description: 深度分析，CoT 思维链
         created: 2026-02-18
+
+  meta-optimize:
+    default: v1
+    versions:
+      v1:
+        description: Meta-Prompting 优化模板
+        created: 2026-02-28
