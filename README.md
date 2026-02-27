@@ -52,9 +52,27 @@ cd LongVideoAgent
 - 幻觉限制（只基于提供内容回答）
 - 防御性提示（防止 Prompt Injection）
 
+## 已实现功能
+
+- [x] **Phase 1: 基础构建**
+  - System Prompt 角色设定与约束
+  - 长文本位置优化（指令在末尾）
+  - 字幕解析服务
+
+- [x] **Phase 2: 应用最佳实践**
+  - 消除歧义与格式化输出（知识点提取）
+  - Few-shot 示例优化
+  - 意图分类 Router
+  - 深度推理（Chain-of-Thought）
+  - Markdown 渲染显示
+  - 流式输出（SSE）
+
+- [x] **Phase 3: 工程化与防御**
+  - Prompt 版本管理（Prompt Library）
+  - Prompt Injection 防御
+  - Vue 3 前端重构
+
 ## 后续扩展
 
-- [ ] Few-shot 示例优化
-- [ ] 意图分类 Router
 - [ ] RAG 向量检索
 - [ ] Function Calling
