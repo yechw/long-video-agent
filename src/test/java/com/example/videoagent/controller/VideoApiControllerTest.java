@@ -5,6 +5,7 @@ import com.example.videoagent.dto.SmartAskResponse;
 import com.example.videoagent.dto.VideoResponse;
 import com.example.videoagent.enums.UserIntent;
 import com.example.videoagent.service.IntentClassificationService;
+import com.example.videoagent.service.PromptOptimizeService;
 import com.example.videoagent.service.VideoService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
@@ -35,6 +36,9 @@ class VideoApiControllerTest {
 
     @MockBean
     private IntentClassificationService intentClassificationService;
+
+    @MockBean
+    private PromptOptimizeService promptOptimizeService;
 
     @Test
     void upload_withFile_shouldReturnSuccess() throws Exception {

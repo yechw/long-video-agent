@@ -28,19 +28,36 @@
       />
       <div class="input-actions">
         <el-checkbox v-model="useStream">流式输出</el-checkbox>
-        <el-button type="primary" @click="sendQuestion" :loading="streaming">
-          发送
-        </el-button>
+        <div class="input-actions-right">
+          <el-button
+            v-if="question.trim()"
+            @click="openOptimizer"
+            :icon="Tools"
+            circle
+            title="优化 Prompt"
+          />
+          <el-button type="primary" @click="sendQuestion" :loading="streaming">
+            发送
+          </el-button>
+        </div>
       </div>
     </div>
+
+    <PromptOptimizer
+      v-model="optimizerVisible"
+      :original-prompt="question"
+      @use="handleUseOptimizedPrompt"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, nextTick } from 'vue'
 import { ElMessage } from 'element-plus'
+import { Tools } from '@element-plus/icons-vue'
 import { videoApi } from '../api/videoApi'
 import MarkdownRenderer from './MarkdownRenderer.vue'
+import PromptOptimizer from './PromptOptimizer.vue'
 
 const props = defineProps<{
   subtitleContent: string
@@ -57,6 +74,20 @@ const messages = ref<Message[]>([])
 const streaming = ref(false)
 const useStream = ref(true)
 const historyRef = ref<HTMLElement | null>(null)
+const optimizerVisible = ref(false)
+
+const openOptimizer = () => {
+  if (!question.value.trim()) {
+    ElMessage.warning('请先输入 Prompt')
+    return
+  }
+  optimizerVisible.value = true
+}
+
+const handleUseOptimizedPrompt = (optimizedPrompt: string) => {
+  question.value = optimizedPrompt
+  ElMessage.success('已使用优化后的 Prompt')
+}
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 // Variable to store stream cleanup function (available for future use)
@@ -206,5 +237,11 @@ async function sendStreamQuestion(q: string) {
   display: flex;
   justify-content: space-between;
   align-items: center;
+}
+
+.input-actions-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 </style>
