@@ -10,7 +10,11 @@
       >
         <div class="message-label">{{ msg.role === 'user' ? '你' : 'AI' }}</div>
         <div class="message-content">
-          <MarkdownRenderer v-if="msg.role === 'assistant'" :content="msg.content" />
+          <!-- 流式输出时显示纯文本，完成后渲染 Markdown -->
+          <template v-if="msg.role === 'assistant' && msg.streaming">
+            <pre class="streaming-text">{{ msg.content }}</pre>
+          </template>
+          <MarkdownRenderer v-else-if="msg.role === 'assistant'" :content="msg.content" />
           <template v-else>{{ msg.content }}</template>
           <span v-if="msg.streaming" class="cursor">|</span>
         </div>
@@ -243,5 +247,14 @@ async function sendStreamQuestion(q: string) {
   display: flex;
   align-items: center;
   gap: 8px;
+}
+
+.streaming-text {
+  margin: 0;
+  font-family: inherit;
+  font-size: inherit;
+  line-height: 1.8;
+  white-space: pre-wrap;
+  word-wrap: break-word;
 }
 </style>
