@@ -155,24 +155,27 @@ async function sendStreamQuestion(q: string) {
     props.subtitleContent,
     q,
     (chunk) => {
-      const msg = getMessage(msgIndex)
-      if (msg) {
-        msg.content += chunk
+      const currentMsg = messages.value[msgIndex]
+      if (currentMsg) {
+        messages.value[msgIndex] = {
+          ...currentMsg,
+          content: currentMsg.content + chunk
+        }
       }
       scrollToBottom()
     },
     (error) => {
-      const msg = getMessage(msgIndex)
-      if (msg) {
-        msg.content = '错误: ' + error
-        msg.streaming = false
+      messages.value[msgIndex] = {
+        ...messages.value[msgIndex],
+        content: '错误: ' + error,
+        streaming: false
       }
       streaming.value = false
     },
     () => {
-      const msg = getMessage(msgIndex)
-      if (msg) {
-        msg.streaming = false
+      messages.value[msgIndex] = {
+        ...messages.value[msgIndex],
+        streaming: false
       }
       streaming.value = false
     }
