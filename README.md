@@ -10,10 +10,11 @@
 
 ## 技术栈
 
-- Java 17
+- Java 21
 - Spring Boot 3.2.x
 - Spring AI Alibaba
-- Thymeleaf
+- Vue 3 + TypeScript + Vite（前端）
+- Element Plus（UI 组件库）
 - Maven (使用 Maven Wrapper，无需本地安装)
 
 ## 快速开始
@@ -24,7 +25,7 @@
 export DASHSCOPE_API_KEY="your-api-key"
 ```
 
-### 2. 启动应用
+### 2. 启动后端
 
 ```bash
 cd LongVideoAgent
@@ -33,9 +34,17 @@ cd LongVideoAgent
 
 > 首次运行会自动下载 Maven，无需本地安装
 
-### 3. 访问应用
+### 3. 启动前端
 
-打开浏览器访问 http://localhost:8080
+```bash
+cd LongVideoAgent/frontend
+npm install
+npm run dev
+```
+
+### 4. 访问应用
+
+打开浏览器访问 http://localhost:5173
 
 ## 使用说明
 
@@ -71,6 +80,7 @@ cd LongVideoAgent
   - Prompt 版本管理（Prompt Library）
   - Prompt Injection 防御
   - Vue 3 前端重构
+  - Markdown 格式优化（Prompt 模板 + 流式渲染）
 
 ## 后续扩展
 
