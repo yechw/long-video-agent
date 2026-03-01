@@ -114,7 +114,11 @@ export const videoApi = {
 
         while (!aborted) {
           const { done, value } = await reader.read()
-          if (done) break
+          if (done) {
+            // 连接关闭时触发完成回调
+            onComplete()
+            break
+          }
 
           const chunk = decoder.decode(value, { stream: true })
           // SSE 格式: "data:内容\n\n"
